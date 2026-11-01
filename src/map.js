@@ -96,12 +96,14 @@ export class GameMap {
   }
 
   /**
-   * Procedurally generate a traditional dungeon floor using randomized rooms & corridors.
-   * @returns {{ playerStart: {x: number, y: number}, rooms: Rect[] }}
+   * Procedurally generate a dungeon floor.
+   * @param {number} floor
+   * @returns {{ playerStart: {x: number, y: number}, rooms: Rect[], bossRoom: Rect|null }}
    */
-  generateDungeon() {
+  generateDungeon(floor = 1) {
     this.initializeTiles();
     this.rooms = [];
+    this.stairsLocation = null;
 
     for (let r = 0; r < CONFIG.MAX_ROOMS; r++) {
       const w = Math.floor(Math.random() * (CONFIG.ROOM_MAX_SIZE - CONFIG.ROOM_MIN_SIZE + 1)) + CONFIG.ROOM_MIN_SIZE;
@@ -119,7 +121,6 @@ export class GameMap {
           const prevCenter = this.rooms[this.rooms.length - 1].center;
           const newCenter = newRoom.center;
 
-          // 50% chance to carve H then V, or V then H
           if (Math.random() < 0.5) {
             this.createTunnelH(prevCenter.x, newCenter.x, prevCenter.y);
             this.createTunnelV(prevCenter.y, newCenter.y, newCenter.x);
@@ -135,8 +136,30 @@ export class GameMap {
 
     const playerStart = this.rooms[0].center;
     const lastRoom = this.rooms[this.rooms.length - 1];
-    this.stairsLocation = lastRoom.center;
 
-    return { playerStart, rooms: this.rooms };
+    if (floor < CONFIG.MAX_DUNGEON_FLOORS) {
+      this.stairsLocation = lastRoom.center;
+    }
+
+    return {
+      playerStart,
+      rooms: this.rooms,
+      bossRoom: floor === CONFIG.MAX_DUNGEON_FLOORS ? lastRoom : null
+    };
+  }
+
+  getRandomFloorTile() {
+    let attempts = 0;
+    while (attempts < 1000) {
+      attempts++;
+      const room = this.rooms[Math.floor(Math.random() * this.rooms.length)];
+      const x = Math.floor(Math.random() * (room.x2 - room.x1 - 1)) + room.x1 + 1;
+      const y = Math.floor(Math.random() * (room.y2 - room.y1 - 1)) + room.y1 + 1;
+
+      if (!this.isBlocked(x, y)) {
+        return { x, y };
+      }
+    }
+    return this.rooms[0].center;
   }
 }

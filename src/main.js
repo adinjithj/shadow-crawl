@@ -1,9 +1,11 @@
 import { CONFIG } from './config.js';
 import { Display } from './display.js';
 import { GameMap } from './map.js';
-import { Player, Monster, Item } from './entity.js';
+import { Player, Monster } from './entity.js';
+import { Item, ITEM_TYPES } from './items.js';
 import { FOV } from './fov.js';
 import { AI } from './ai.js';
+import { audio } from './audio.js';
 
 export class Game {
   constructor() {
@@ -13,6 +15,7 @@ export class Game {
     this.dungeonFloor = 1;
     this.turnCount = 0;
     this.isGameOver = false;
+    this.isVictory = false;
 
     // Entities
     this.player = null;
@@ -22,9 +25,22 @@ export class Game {
     // Message Log
     this.messages = [];
 
+    this.initAudioButton();
     this.initFloor();
     this.setupInput();
-    this.render();
+    this.startAnimationLoop();
+  }
+
+  initAudioButton() {
+    const audioBtn = document.getElementById('audio-toggle-btn');
+    if (audioBtn) {
+      audioBtn.textContent = audio.muted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
+      audioBtn.addEventListener('click', () => {
+        audio.init();
+        const isMuted = audio.toggleMute();
+        audioBtn.textContent = isMuted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
+      });
+    }
   }
 
   log(message, type = 'default') {
@@ -42,7 +58,7 @@ export class Game {
   }
 
   initFloor() {
-    const { playerStart, rooms } = this.map.generateDungeon();
+    const { playerStart, rooms, bossRoom } = this.map.generateDungeon(this.dungeonFloor);
 
     if (!this.player) {
       this.player = new Player(playerStart.x, playerStart.y);
@@ -53,32 +69,39 @@ export class Game {
     this.monsters = [];
     this.items = [];
 
-    // Spawn monsters and items in rooms (except player starting room)
+    // Special Boss Floor (Floor 5)
+    if (this.dungeonFloor === CONFIG.MAX_DUNGEON_FLOORS && bossRoom) {
+      const boss = new Monster(bossRoom.center.x, bossRoom.center.y, 'boss');
+      this.monsters.push(boss);
+      this.log('A terrifying chill grips your soul... The Shadow Lord awaits!', 'danger');
+    }
+
+    // Spawn monsters & items in normal rooms
     for (let i = 1; i < rooms.length; i++) {
       const room = rooms[i];
+      if (room === bossRoom) continue;
 
-      // Spawn 1-2 monsters
+      // Spawn 1-2 Monsters
       const numMonsters = Math.floor(Math.random() * (CONFIG.MAX_MONSTERS_PER_ROOM + 1));
       for (let m = 0; m < numMonsters; m++) {
         const mx = Math.floor(Math.random() * (room.x2 - room.x1 - 1)) + room.x1 + 1;
         const my = Math.floor(Math.random() * (room.y2 - room.y1 - 1)) + room.y1 + 1;
 
         if (!this.getBlockingEntityAt(mx, my)) {
-          const type = Math.random() < 0.7 ? 'goblin' : 'orc';
-          this.monsters.push(new Monster(mx, my, type));
+          this.monsters.push(Monster.createForFloor(mx, my, this.dungeonFloor));
         }
       }
 
-      // 40% chance of a potion in a room
-      if (Math.random() < 0.4) {
+      // 45% chance for ground loot in room
+      if (Math.random() < 0.45) {
         const px = Math.floor(Math.random() * (room.x2 - room.x1 - 1)) + room.x1 + 1;
         const py = Math.floor(Math.random() * (room.y2 - room.y1 - 1)) + room.y1 + 1;
-        this.items.push(new Item(px, py, 'potion'));
+        this.items.push(Item.createRandom(px, py, this.dungeonFloor));
       }
     }
 
     FOV.compute(this.map, this.player.x, this.player.y);
-    this.log(`Entered Dungeon Floor ${this.dungeonFloor}. Tread carefully!`, 'gold');
+    this.log(`Entered Dungeon Floor B${this.dungeonFloor}.`, 'gold');
     this.updateUI();
   }
 
@@ -95,17 +118,40 @@ export class Game {
 
     if (damage > 0) {
       this.log(`${attacker.name} strikes ${defender.name} for ${damage} damage!`, color);
+      this.display.addFloatingText(defender.x, defender.y, `-${damage}`, defender === this.player ? '#f85149' : '#e3b341');
+
+      if (defender === this.player) {
+        audio.playerHurt();
+        this.display.triggerShake(5);
+      } else {
+        audio.hit();
+      }
     } else {
-      this.log(`${attacker.name}'s attack glances off ${defender.name}'s armor.`, 'muted');
+      this.log(`${attacker.name}'s strike glances off ${defender.name}'s defense.`, 'muted');
     }
 
     if (!defender.isAlive) {
       if (defender === this.player) {
+        audio.gameOver();
         this.log(`You have been slain by ${attacker.name}! Press 'R' to restart.`, 'danger');
         this.isGameOver = true;
       } else {
-        this.log(`${defender.name} dies!`, 'gold');
-        this.player.xp += defender.name === 'Orc' ? 35 : 20;
+        audio.monsterDeath();
+        this.log(`${defender.name} is vanquished!`, 'gold');
+        
+        // XP Reward
+        let xpReward = 20;
+        if (defender.monsterType === 'orc') xpReward = 35;
+        if (defender.monsterType === 'skeleton') xpReward = 50;
+        if (defender.monsterType === 'drake') xpReward = 80;
+        if (defender.monsterType === 'boss') {
+          xpReward = 250;
+          // Boss drops Amulet of Yendor
+          this.items.push(new Item(defender.x, defender.y, ITEM_TYPES.AMULET));
+          this.log('The Shadow Lord drops the radiant Amulet of Yendor!', 'gold');
+        }
+
+        this.player.xp += xpReward;
         this.checkLevelUp();
       }
     }
@@ -116,25 +162,124 @@ export class Game {
       this.player.level++;
       this.player.xp -= this.player.xpToNext;
       this.player.xpToNext = Math.floor(this.player.xpToNext * 1.5);
-      this.player.maxHp += 8;
+      this.player.maxHp += 10;
       this.player.hp = this.player.maxHp;
-      this.player.attackPower += 2;
-      this.log(`Level Up! You are now Level ${this.player.level}! (+8 Max HP, +2 ATK)`, 'gold');
+      this.player.baseAttack += 2;
+      this.player.baseDefense += 1;
+      
+      audio.levelUp();
+      this.display.addFloatingText(this.player.x, this.player.y, 'LEVEL UP!', '#3fb950');
+      this.log(`Level Up! You are now Level ${this.player.level}! (+10 Max HP, +2 ATK, +1 DEF)`, 'gold');
+    }
+  }
+
+  useItemFromSlot(slotIndex) {
+    if (this.isGameOver || this.isVictory) return;
+    const item = this.player.inventory[slotIndex];
+    if (!item) {
+      this.log(`Slot [${slotIndex + 1}] is empty.`, 'muted');
+      return;
+    }
+
+    audio.init();
+
+    switch (item.type) {
+      case ITEM_TYPES.POTION:
+      case ITEM_TYPES.GREATER_POTION: {
+        const healAmt = item.options.healAmount || 15;
+        const healed = this.player.heal(healAmt);
+        this.player.removeFromInventory(slotIndex);
+        audio.potion();
+        this.display.addFloatingText(this.player.x, this.player.y, `+${healed} HP`, '#3fb950');
+        this.log(`You quaff the ${item.name} and restore ${healed} HP.`, 'success');
+        this.endTurn();
+        break;
+      }
+
+      case ITEM_TYPES.SCROLL_LIGHTNING: {
+        // Find closest visible monster
+        const visibleMonsters = this.monsters.filter(m => m.isAlive && this.map.tiles[m.y][m.x].visible);
+        if (visibleMonsters.length === 0) {
+          this.log('No visible enemies to strike with lightning!', 'muted');
+          return;
+        }
+
+        visibleMonsters.sort((a, b) => {
+          const distA = Math.hypot(a.x - this.player.x, a.y - this.player.y);
+          const distB = Math.hypot(b.x - this.player.x, b.y - this.player.y);
+          return distA - distB;
+        });
+
+        const target = visibleMonsters[0];
+        this.player.removeFromInventory(slotIndex);
+        audio.lightning();
+        this.display.triggerShake(7);
+
+        const dmg = item.options.damage || 25;
+        target.takeDamage(dmg);
+        this.display.addFloatingText(target.x, target.y, `⚡ -${dmg}`, '#a371f7');
+        this.log(`Crackling lightning strikes ${target.name} for ${dmg} damage!`, 'purple');
+
+        if (!target.isAlive) {
+          audio.monsterDeath();
+          this.log(`${target.name} turns to ash!`, 'gold');
+          this.player.xp += 30;
+          this.checkLevelUp();
+        }
+
+        this.endTurn();
+        break;
+      }
+
+      case ITEM_TYPES.SCROLL_TELEPORT: {
+        const safeTile = this.map.getRandomFloorTile();
+        this.player.moveTo(safeTile.x, safeTile.y);
+        this.player.removeFromInventory(slotIndex);
+        audio.teleport();
+        this.display.addFloatingText(this.player.x, this.player.y, 'TELEPORT!', '#38bdf8');
+        this.log('Reality bends... you reappear elsewhere in the dungeon!', 'cyan');
+        this.endTurn();
+        break;
+      }
+
+      case ITEM_TYPES.WEAPON: {
+        const oldWeapon = this.player.equipWeapon(item);
+        this.player.removeFromInventory(slotIndex);
+        if (oldWeapon) {
+          this.player.addToInventory(oldWeapon);
+        }
+        audio.equip();
+        this.log(`Equipped weapon: ${item.name} (+${item.options.attackBonus || 0} ATK).`, 'cyan');
+        this.updateUI();
+        break;
+      }
+
+      case ITEM_TYPES.ARMOR: {
+        const oldArmor = this.player.equipArmor(item);
+        this.player.removeFromInventory(slotIndex);
+        if (oldArmor) {
+          this.player.addToInventory(oldArmor);
+        }
+        audio.equip();
+        this.log(`Equipped armor: ${item.name} (+${item.options.defenseBonus || 0} DEF).`, 'cyan');
+        this.updateUI();
+        break;
+      }
     }
   }
 
   handlePlayerTurn(dx, dy) {
-    if (this.isGameOver) return;
+    if (this.isGameOver || this.isVictory) return;
+
+    audio.init();
 
     const targetX = this.player.x + dx;
     const targetY = this.player.y + dy;
 
-    // Check bounds & wall
     if (this.map.isBlocked(targetX, targetY)) {
-      return; // Can't walk into walls
+      return;
     }
 
-    // Check if monster at target -> bump attack
     const targetMonster = this.monsters.find(m => m.isAlive && m.x === targetX && m.y === targetY);
     if (targetMonster) {
       this.attack(this.player, targetMonster);
@@ -144,22 +289,45 @@ export class Game {
 
     // Move player
     this.player.moveTo(targetX, targetY);
+    audio.footstep();
 
-    // Check items pickup
+    // Check ground items
     const itemIndex = this.items.findIndex(it => it.x === targetX && it.y === targetY);
     if (itemIndex !== -1) {
       const item = this.items[itemIndex];
-      const healed = this.player.heal(item.healAmount);
-      this.items.splice(itemIndex, 1);
-      this.log(`You drank a ${item.name} and recovered ${healed} HP!`, 'success');
+
+      if (item.type === ITEM_TYPES.GOLD) {
+        const val = item.options.value || 15;
+        this.player.gold += val;
+        this.items.splice(itemIndex, 1);
+        audio.gold();
+        this.display.addFloatingText(this.player.x, this.player.y, `+${val}g`, '#e3b341');
+        this.log(`You gathered ${val} gold coins.`, 'gold');
+      } else if (item.type === ITEM_TYPES.AMULET) {
+        this.items.splice(itemIndex, 1);
+        audio.victory();
+        this.isVictory = true;
+        this.log('You claim the Amulet of Yendor! You have conquered Shadow Crawl!', 'gold');
+        this.updateUI();
+        return;
+      } else {
+        const added = this.player.addToInventory(item);
+        if (added) {
+          this.items.splice(itemIndex, 1);
+          audio.equip();
+          this.log(`Picked up ${item.name}. (Press 1-5 to use/equip)`, 'success');
+        } else {
+          this.log(`Inventory full! Cannot carry ${item.name}.`, 'muted');
+        }
+      }
     }
 
     // Check stairs down
     if (this.map.stairsLocation && targetX === this.map.stairsLocation.x && targetY === this.map.stairsLocation.y) {
       this.dungeonFloor++;
-      this.log(`You descend the dark stone stairs to floor ${this.dungeonFloor}...`, 'gold');
+      audio.stairs();
+      this.log(`You descend deeper into the darkness (Floor B${this.dungeonFloor})...`, 'gold');
       this.initFloor();
-      this.render();
       return;
     }
 
@@ -169,33 +337,28 @@ export class Game {
   endTurn() {
     this.turnCount++;
 
-    // Enemy turns
     for (const monster of this.monsters) {
       if (monster.isAlive) {
         AI.takeTurn(monster, this);
       }
     }
 
-    // Filter dead monsters
     this.monsters = this.monsters.filter(m => m.isAlive);
-
-    // Update FOV & UI
     FOV.compute(this.map, this.player.x, this.player.y);
     this.updateUI();
-    this.render();
   }
 
   restart() {
     this.dungeonFloor = 1;
     this.turnCount = 0;
     this.isGameOver = false;
+    this.isVictory = false;
     this.player = null;
     this.messages = [];
     const logBox = document.getElementById('log-box');
     if (logBox) logBox.innerHTML = '';
     this.initFloor();
-    this.render();
-    this.log('A new adventure begins in the shadows.', 'gold');
+    this.log('A new hero steps into the shadows...', 'gold');
   }
 
   updateUI() {
@@ -204,6 +367,9 @@ export class Game {
     const floorText = document.getElementById('floor-text');
     const turnText = document.getElementById('turn-text');
     const levelText = document.getElementById('level-text');
+    const goldText = document.getElementById('gold-text');
+    const gearText = document.getElementById('gear-text');
+    const hotbarElem = document.getElementById('inventory-hotbar');
 
     if (this.player) {
       const hpPercent = Math.max(0, (this.player.hp / this.player.maxHp) * 100);
@@ -212,7 +378,36 @@ export class Game {
       if (floorText) floorText.textContent = `B${this.dungeonFloor}`;
       if (turnText) turnText.textContent = this.turnCount;
       if (levelText) levelText.textContent = `Lv ${this.player.level} (${this.player.xp}/${this.player.xpToNext} XP)`;
+      if (goldText) goldText.textContent = `${this.player.gold}g`;
+
+      const weaponName = this.player.equippedWeapon ? this.player.equippedWeapon.name : 'Fists (+0)';
+      const armorName = this.player.equippedArmor ? this.player.equippedArmor.name : 'Clothes (+0)';
+      if (gearText) gearText.textContent = `🗡️ ${weaponName} | 🛡️ ${armorName} | ATK: ${this.player.attackPower} | DEF: ${this.player.defense}`;
+
+      // Render 5 inventory slots
+      if (hotbarElem) {
+        hotbarElem.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+          const item = this.player.inventory[i];
+          const slot = document.createElement('div');
+          slot.className = `hotbar-slot ${item ? 'filled' : 'empty'}`;
+          slot.innerHTML = `
+            <span class="slot-num">[${i + 1}]</span>
+            <span class="slot-name">${item ? item.name : 'Empty'}</span>
+          `;
+          slot.addEventListener('click', () => this.useItemFromSlot(i));
+          hotbarElem.appendChild(slot);
+        }
+      }
     }
+  }
+
+  startAnimationLoop() {
+    const renderFrame = () => {
+      this.render();
+      requestAnimationFrame(renderFrame);
+    };
+    requestAnimationFrame(renderFrame);
   }
 
   render() {
@@ -233,7 +428,7 @@ export class Game {
       }
     }
 
-    // 2. Render Stairs (if explored or visible)
+    // 2. Render Stairs
     if (this.map.stairsLocation) {
       const sx = this.map.stairsLocation.x;
       const sy = this.map.stairsLocation.y;
@@ -242,14 +437,14 @@ export class Game {
       }
     }
 
-    // 3. Render Items (if in visible tile)
+    // 3. Render Items
     for (const item of this.items) {
       if (this.map.tiles[item.y][item.x].visible) {
         this.display.draw(item.x, item.y, item.char, item.color);
       }
     }
 
-    // 4. Render Monsters (if in visible tile)
+    // 4. Render Monsters
     for (const monster of this.monsters) {
       if (monster.isAlive && this.map.tiles[monster.y][monster.x].visible) {
         this.display.draw(monster.x, monster.y, monster.char, monster.color);
@@ -261,15 +456,37 @@ export class Game {
       this.display.draw(this.player.x, this.player.y, this.player.char, this.player.color);
     }
 
-    // 6. Game Over Overlay
+    // 6. Floating Damage / FX Text
+    this.display.renderFloatingTexts();
+
+    // 7. Victory Screen
+    if (this.isVictory) {
+      const ctx = this.display.ctx;
+      ctx.fillStyle = 'rgba(5, 12, 25, 0.88)';
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+      ctx.fillStyle = CONFIG.COLORS.AMULET;
+      ctx.font = `bold 32px ${CONFIG.FONT_FAMILY}`;
+      ctx.fillText('★ VICTORY ACHIEVED ★', this.canvas.width / 2, this.canvas.height / 2 - 40);
+
+      ctx.fillStyle = CONFIG.COLORS.TEXT_DEFAULT;
+      ctx.font = `18px ${CONFIG.FONT_FAMILY}`;
+      ctx.fillText(`You conquered the dungeon in ${this.turnCount} turns with ${this.player.gold} gold!`, this.canvas.width / 2, this.canvas.height / 2 + 10);
+
+      ctx.fillStyle = CONFIG.COLORS.TEXT_SUCCESS;
+      ctx.fillText("Press 'R' to begin a new delve", this.canvas.width / 2, this.canvas.height / 2 + 50);
+      return;
+    }
+
+    // 8. Game Over Screen
     if (this.isGameOver) {
       const ctx = this.display.ctx;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.fillStyle = 'rgba(10, 0, 0, 0.85)';
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
       ctx.fillStyle = CONFIG.COLORS.TEXT_DANGER;
-      ctx.font = `bold 28px ${CONFIG.FONT_FAMILY}`;
-      ctx.fillText('YOU HAVE DIED', this.canvas.width / 2, this.canvas.height / 2 - 20);
+      ctx.font = `bold 30px ${CONFIG.FONT_FAMILY}`;
+      ctx.fillText('YOU HAVE DIED', this.canvas.width / 2, this.canvas.height / 2 - 25);
 
       ctx.fillStyle = CONFIG.COLORS.TEXT_DEFAULT;
       ctx.font = `18px ${CONFIG.FONT_FAMILY}`;
@@ -279,10 +496,19 @@ export class Game {
 
   setupInput() {
     window.addEventListener('keydown', (e) => {
-      if (this.isGameOver) {
+      audio.init();
+
+      if (this.isGameOver || this.isVictory) {
         if (e.key === 'r' || e.key === 'R' || e.key === ' ') {
           this.restart();
         }
+        return;
+      }
+
+      // Hotbar Number Keys: 1, 2, 3, 4, 5
+      if (['1', '2', '3', '4', '5'].includes(e.key)) {
+        const slot = parseInt(e.key, 10) - 1;
+        this.useItemFromSlot(slot);
         return;
       }
 
@@ -290,7 +516,6 @@ export class Game {
       let dy = 0;
 
       switch (e.key) {
-        // Arrow Keys & WASD
         case 'ArrowUp':
         case 'w':
         case 'W':
@@ -316,7 +541,6 @@ export class Game {
           dx = 1;
           break;
 
-        // Wait a turn
         case '.':
         case '5':
         case ' ':
