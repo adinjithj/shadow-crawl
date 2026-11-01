@@ -26,7 +26,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 16px;
+  padding: 14px;
   user-select: none;
 }
 
@@ -39,7 +39,7 @@ body {
   border-radius: 8px;
   padding: 14px;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
-  max-width: 1020px;
+  max-width: 1040px;
   width: 100%;
 }
 
@@ -55,7 +55,7 @@ body {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .logo {
@@ -70,7 +70,7 @@ body {
 }
 
 .logo h1 {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: 2px;
   color: var(--text-primary);
@@ -81,9 +81,9 @@ body {
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  padding: 4px 8px;
+  padding: 5px 9px;
   font-family: inherit;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -91,6 +91,17 @@ body {
 .header-btn:hover {
   background-color: #30363d;
   border-color: var(--accent-cyan);
+}
+
+.guide-btn {
+  background-color: #1f364d;
+  border-color: #388bfd;
+  color: #79c0ff;
+  font-weight: 600;
+}
+
+.guide-btn:hover {
+  background-color: #264766;
 }
 
 #stats-panel {
@@ -173,20 +184,75 @@ body {
   font-weight: 500;
 }
 
-/* Viewport */
-#viewport-wrapper {
+/* Viewport Container with Dpad */
+#viewport-container {
   display: flex;
-  justify-content: center;
+  gap: 12px;
   align-items: center;
+  justify-content: center;
+}
+
+#viewport-wrapper {
   background-color: #05070a;
   border: 1px solid var(--border-color);
   border-radius: 6px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 canvas#game-canvas {
   display: block;
   image-rendering: pixelated;
+}
+
+/* On-Screen D-Pad */
+#dpad-controller {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background-color: #0b0f16;
+  border: 1px solid var(--border-color);
+  padding: 10px 8px;
+  border-radius: 8px;
+  user-select: none;
+}
+
+.dpad-middle-row {
+  display: flex;
+  gap: 6px;
+}
+
+.dpad-btn {
+  width: 36px;
+  height: 36px;
+  background-color: #1a2230;
+  border: 1px solid #303e54;
+  color: var(--accent-cyan);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.1s ease;
+}
+
+.dpad-btn:hover {
+  background-color: #28374f;
+  border-color: var(--accent-cyan);
+}
+
+.dpad-btn:active {
+  transform: scale(0.92);
+  background-color: var(--accent-cyan);
+  color: #090d13;
+}
+
+.dpad-btn.wait {
+  color: var(--accent-gold);
 }
 
 /* Hotbar */
@@ -332,3 +398,123 @@ canvas#game-canvas {
 .glyph.armor { color: #56d364; font-weight: bold; }
 .glyph.gold { color: #e3b341; font-weight: bold; }
 .glyph.amulet { color: #ffd700; font-weight: bold; }
+.glyph.stairs { color: #f0883e; font-weight: bold; }
+
+/* Interactive How-To-Play Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.82);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.modal-backdrop.hidden {
+  display: none;
+}
+
+.modal-window {
+  background-color: #121722;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  max-width: 620px;
+  width: 100%;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background-color: #1a2230;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+  font-size: 1.05rem;
+  letter-spacing: 1.5px;
+  color: var(--accent-gold);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.close-btn:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.guide-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.step-num {
+  width: 26px;
+  height: 26px;
+  background-color: #212e42;
+  border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.step-text {
+  color: #c9d1d9;
+}
+
+.modal-footer {
+  padding: 14px 18px;
+  background-color: #0b0f16;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: center;
+}
+
+.cta-btn {
+  background: linear-gradient(135deg, #1f6feb, #238636);
+  border: none;
+  color: #fff;
+  padding: 12px 24px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(31, 111, 235, 0.4);
+  transition: all 0.15s ease;
+}
+
+.cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(35, 134, 54, 0.5);
+}

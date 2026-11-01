@@ -26,6 +26,8 @@ export class Game {
     this.messages = [];
 
     this.initAudioButton();
+    this.initGuideModal();
+    this.initDpad();
     this.initFloor();
     this.setupInput();
     this.startAnimationLoop();
@@ -41,6 +43,55 @@ export class Game {
         audioBtn.textContent = isMuted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
       });
     }
+  }
+
+  initGuideModal() {
+    const modal = document.getElementById('guide-modal');
+    const guideBtn = document.getElementById('guide-btn');
+    const closeBtn = document.getElementById('close-modal-btn');
+    const startBtn = document.getElementById('start-game-btn');
+
+    const openModal = () => {
+      if (modal) modal.classList.remove('hidden');
+    };
+
+    const closeModal = () => {
+      if (modal) modal.classList.add('hidden');
+      audio.init();
+      audio.playTone(520, 'sine', 0.1, 0.15);
+    };
+
+    if (guideBtn) guideBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (startBtn) startBtn.addEventListener('click', closeModal);
+  }
+
+  initDpad() {
+    const dpadButtons = document.querySelectorAll('.dpad-btn');
+    dpadButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        audio.init();
+        const dir = btn.dataset.dir;
+        switch (dir) {
+          case 'up':
+            this.handlePlayerTurn(0, -1);
+            break;
+          case 'down':
+            this.handlePlayerTurn(0, 1);
+            break;
+          case 'left':
+            this.handlePlayerTurn(-1, 0);
+            break;
+          case 'right':
+            this.handlePlayerTurn(1, 0);
+            break;
+          case 'wait':
+            this.endTurn();
+            break;
+        }
+      });
+    });
   }
 
   log(message, type = 'default') {
@@ -139,14 +190,12 @@ export class Game {
         audio.monsterDeath();
         this.log(`${defender.name} is vanquished!`, 'gold');
         
-        // XP Reward
         let xpReward = 20;
         if (defender.monsterType === 'orc') xpReward = 35;
         if (defender.monsterType === 'skeleton') xpReward = 50;
         if (defender.monsterType === 'drake') xpReward = 80;
         if (defender.monsterType === 'boss') {
           xpReward = 250;
-          // Boss drops Amulet of Yendor
           this.items.push(new Item(defender.x, defender.y, ITEM_TYPES.AMULET));
           this.log('The Shadow Lord drops the radiant Amulet of Yendor!', 'gold');
         }
@@ -197,7 +246,6 @@ export class Game {
       }
 
       case ITEM_TYPES.SCROLL_LIGHTNING: {
-        // Find closest visible monster
         const visibleMonsters = this.monsters.filter(m => m.isAlive && this.map.tiles[m.y][m.x].visible);
         if (visibleMonsters.length === 0) {
           this.log('No visible enemies to strike with lightning!', 'muted');
@@ -384,7 +432,6 @@ export class Game {
       const armorName = this.player.equippedArmor ? this.player.equippedArmor.name : 'Clothes (+0)';
       if (gearText) gearText.textContent = `🗡️ ${weaponName} | 🛡️ ${armorName} | ATK: ${this.player.attackPower} | DEF: ${this.player.defense}`;
 
-      // Render 5 inventory slots
       if (hotbarElem) {
         hotbarElem.innerHTML = '';
         for (let i = 0; i < 5; i++) {

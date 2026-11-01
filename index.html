@@ -15,6 +15,7 @@
           <span class="icon">⚔</span>
           <h1>SHADOW CRAWL</h1>
         </div>
+        <button id="guide-btn" class="header-btn guide-btn">📖 How to Play</button>
         <button id="audio-toggle-btn" class="header-btn" title="Toggle 8-bit Sound Effects">🔊 Sound: ON</button>
       </div>
 
@@ -53,10 +54,23 @@
       <span id="gear-text" class="ribbon-val">🗡️ Fists (+0) | 🛡️ Clothes (+0) | ATK: 6 | DEF: 1</span>
     </div>
 
-    <!-- Main Viewport -->
-    <main id="viewport-wrapper">
-      <canvas id="game-canvas"></canvas>
-    </main>
+    <!-- Main Viewport & Touch D-pad Wrapper -->
+    <div id="viewport-container">
+      <main id="viewport-wrapper">
+        <canvas id="game-canvas"></canvas>
+      </main>
+
+      <!-- Clickable D-pad Controller for Quick Navigation -->
+      <div id="dpad-controller">
+        <button class="dpad-btn up" data-dir="up">▲</button>
+        <div class="dpad-middle-row">
+          <button class="dpad-btn left" data-dir="left">◀</button>
+          <button class="dpad-btn wait" data-dir="wait" title="Wait 1 Turn">●</button>
+          <button class="dpad-btn right" data-dir="right">▶</button>
+        </div>
+        <button class="dpad-btn down" data-dir="down">▼</button>
+      </div>
+    </div>
 
     <!-- Hotbar -->
     <div id="hotbar-section">
@@ -71,14 +85,14 @@
     <!-- Bottom Chronicle & Legend Panels -->
     <footer id="game-footer">
       <div class="panel log-panel">
-        <div class="panel-title">CHRONICLE</div>
+        <div class="panel-title">CHRONICLE (COMBAT & EXPLORATION LOG)</div>
         <div id="log-box" class="log-container"></div>
       </div>
       <div class="panel controls-panel">
         <div class="panel-title">CONTROLS & BESTIARY</div>
         <div class="controls-content">
           <div class="control-row">
-            <span class="key">WASD / Arrows</span>
+            <span class="key">WASD / Arrows / D-Pad</span>
             <span class="desc">Move & Bump Attack</span>
           </div>
           <div class="control-row">
@@ -86,7 +100,7 @@
             <span class="desc">Use / Equip Item</span>
           </div>
           <div class="control-row">
-            <span class="key">Space / .</span>
+            <span class="key">Space / . / ●</span>
             <span class="desc">Wait 1 Turn</span>
           </div>
           <div class="control-row">
@@ -94,12 +108,12 @@
             <span class="desc">Restart on Death</span>
           </div>
           <div class="legend-row">
-            <span class="glyph hero">@</span> Hero &nbsp;|&nbsp;
+            <span class="glyph hero">@</span> You &nbsp;|&nbsp;
             <span class="glyph goblin">g</span> Goblin &nbsp;|&nbsp;
             <span class="glyph orc">o</span> Orc &nbsp;|&nbsp;
             <span class="glyph skeleton">s</span> Skeleton &nbsp;|&nbsp;
             <span class="glyph drake">D</span> Drake &nbsp;|&nbsp;
-            <span class="glyph boss">Ω</span> Malakor
+            <span class="glyph boss">Ω</span> Boss
           </div>
           <div class="legend-row">
             <span class="glyph potion">!</span> Potion &nbsp;|&nbsp;
@@ -107,11 +121,59 @@
             <span class="glyph weapon">/</span> Weapon &nbsp;|&nbsp;
             <span class="glyph armor">]</span> Armor &nbsp;|&nbsp;
             <span class="glyph gold">$</span> Gold &nbsp;|&nbsp;
-            <span class="glyph amulet">*</span> Amulet
+            <span class="glyph stairs">&gt;</span> Stairs Down
           </div>
         </div>
       </div>
     </footer>
+  </div>
+
+  <!-- Interactive How-to-Play Modal -->
+  <div id="guide-modal" class="modal-backdrop">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h2>⚔️ HOW TO PLAY SHADOW CRAWL</h2>
+        <button id="close-modal-btn" class="close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="guide-step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>You are the <span class="glyph hero">@</span> symbol</strong>:
+            This is a turn-based dungeon crawler. The world only moves when <em>you</em> take a step. Take all the time you need to plan your moves!
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Movement & Combat (Bump-to-Attack)</strong>:
+            Use <span class="key">W A S D</span>, <span class="key">Arrow Keys</span>, or the on-screen <span class="key">▲ ◀ ▶ ▼</span> D-pad.
+            To attack an enemy, <strong>simply walk directly into them</strong>!
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Gather Loot & Manage Satchel</strong>:
+            Step over Potions (<span class="glyph potion">!</span>), Scrolls (<span class="glyph scroll">?</span>), Weapons (<span class="glyph weapon">/</span>), Armor (<span class="glyph armor">]</span>), or Gold (<span class="glyph gold">$</span>).
+            Press <span class="key">1</span> through <span class="key">5</span> or click the slot to drink a potion, cast lightning, or equip gear!
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>The Objective</strong>:
+            Find the stone stairs (<span class="glyph stairs">&gt;</span>) in each floor to descend deeper into the crypts. Reach Floor <strong>B5</strong>, defeat the <strong>Shadow Lord Malakor</strong> (<span class="glyph boss">Ω</span>), and claim the <strong>Amulet of Yendor</strong> (<span class="glyph amulet">*</span>) to win!
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="start-game-btn" class="cta-btn">⚔️ ENTER THE DUNGEON (ENABLES AUDIO)</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="src/main.js"></script>
