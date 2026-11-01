@@ -21,9 +21,9 @@ export class Display {
     this.canvas.width = this.width * this.tileWidth;
     this.canvas.height = this.height * this.tileHeight;
 
-    // Sprite Cache & Rendering Mode
+    // Sprite Cache & Rendering Mode (Default: 2D Sprites)
     this.sprites = new SpriteRenderer(this.tileWidth);
-    this.mode = localStorage.getItem('shadow_crawl_gfx') || 'sprites'; // 'sprites' | 'ascii'
+    this.mode = localStorage.getItem('shadow_crawl_gfx') || 'sprites';
 
     // Configure text rendering
     this.ctx.font = `bold ${CONFIG.FONT_SIZE}px ${CONFIG.FONT_FAMILY}`;
@@ -42,7 +42,7 @@ export class Display {
     return this.mode;
   }
 
-  triggerShake(intensity = 5) {
+  triggerShake(intensity = 6) {
     this.shakeIntensity = intensity;
   }
 
@@ -52,8 +52,8 @@ export class Display {
       y: y * this.tileHeight + this.tileHeight / 2,
       text: text,
       color: color,
-      life: 25,
-      maxLife: 25
+      life: 28,
+      maxLife: 28
     });
   }
 
@@ -70,15 +70,6 @@ export class Display {
     }
   }
 
-  /**
-   * Draw a 2D Sprite if mode is 'sprites', or fall back to ASCII text glyph.
-   * @param {number} x Grid X coordinate
-   * @param {number} y Grid Y coordinate
-   * @param {string} spriteName Key in sprite cache
-   * @param {string} fallbackChar Character glyph if in ASCII mode
-   * @param {string} fgColor Foreground color for ASCII
-   * @param {string} [bgColor] Background color
-   */
   drawTile(x, y, spriteName, fallbackChar, fgColor = CONFIG.COLORS.TEXT_DEFAULT, bgColor = null) {
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
 
@@ -93,7 +84,7 @@ export class Display {
       }
     }
 
-    // ASCII fallback or selected mode
+    // ASCII Mode
     if (bgColor) {
       this.ctx.fillStyle = bgColor;
       this.ctx.fillRect(px, py, this.tileWidth, this.tileHeight);
@@ -108,24 +99,21 @@ export class Display {
     );
   }
 
-  draw(x, y, char, fgColor = CONFIG.COLORS.TEXT_DEFAULT, bgColor = null) {
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
+  drawMonsterHealthBar(x, y, hp, maxHp) {
+    if (hp >= maxHp) return;
+    const px = x * this.tileWidth + 3;
+    const py = y * this.tileHeight - 3;
+    const barW = this.tileWidth - 6;
+    const barH = 3;
 
-    const px = x * this.tileWidth;
-    const py = y * this.tileHeight;
+    // BG
+    this.ctx.fillStyle = '#1f242c';
+    this.ctx.fillRect(px, py, barW, barH);
 
-    if (bgColor) {
-      this.ctx.fillStyle = bgColor;
-      this.ctx.fillRect(px, py, this.tileWidth, this.tileHeight);
-    }
-
-    this.ctx.fillStyle = fgColor;
-    this.ctx.font = `bold ${CONFIG.FONT_SIZE}px ${CONFIG.FONT_FAMILY}`;
-    this.ctx.fillText(
-      char,
-      px + this.tileWidth / 2,
-      py + this.tileHeight / 2 + 1
-    );
+    // Fill
+    const fillW = Math.max(1, Math.floor((hp / maxHp) * barW));
+    this.ctx.fillStyle = '#f85149';
+    this.ctx.fillRect(px, py, fillW, barH);
   }
 
   renderFloatingTexts() {
@@ -137,10 +125,10 @@ export class Display {
 
       this.ctx.globalAlpha = alpha;
       this.ctx.fillStyle = ft.color;
-      this.ctx.font = `bold ${CONFIG.FONT_SIZE + 2}px ${CONFIG.FONT_FAMILY}`;
+      this.ctx.font = `bold ${CONFIG.FONT_SIZE + 4}px ${CONFIG.FONT_FAMILY}`;
       this.ctx.fillText(ft.text, ft.x, ft.y);
 
-      ft.y -= 0.8;
+      ft.y -= 0.9;
       ft.life--;
 
       if (ft.life <= 0) {

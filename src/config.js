@@ -2,33 +2,33 @@
  * Game configuration and global constants for Shadow Crawl.
  */
 export const CONFIG = {
-  // Grid dimensions (in tiles)
-  MAP_WIDTH: 48,
-  MAP_HEIGHT: 24,
+  // Grid dimensions (compact & dense for high-visibility action)
+  MAP_WIDTH: 36,
+  MAP_HEIGHT: 20,
 
-  // Tile rendering dimensions (pixels per character/sprite)
-  TILE_WIDTH: 20,
-  TILE_HEIGHT: 20,
+  // Tile rendering dimensions (28px crisp pixel art tiles)
+  TILE_WIDTH: 28,
+  TILE_HEIGHT: 28,
   FONT_FAMILY: '"JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, monospace',
-  FONT_SIZE: 15,
+  FONT_SIZE: 18,
 
-  // Dungeon Generation Settings
-  MAX_ROOMS: 12,
-  ROOM_MIN_SIZE: 5,
-  ROOM_MAX_SIZE: 10,
+  // Dungeon Generation Settings (Dense rooms, no vast empty voids)
+  MAX_ROOMS: 9,
+  ROOM_MIN_SIZE: 6,
+  ROOM_MAX_SIZE: 11,
   MAX_MONSTERS_PER_ROOM: 2,
   MAX_ITEMS_PER_ROOM: 2,
   MAX_DUNGEON_FLOORS: 5,
 
   // Visual Palette
   COLORS: {
-    BACKGROUND: '#090d13',
-    PANEL_BG: '#121722',
-    BORDER: '#262e3d',
-    WALL_DARK: '#1c222c',
-    WALL_LIT: '#6e7f96',
-    FLOOR_DARK: '#10141a',
-    FLOOR_LIT: '#323e4e',
+    BACKGROUND: '#06090e',
+    PANEL_BG: '#0d131d',
+    BORDER: '#1f2b3e',
+    WALL_DARK: '#121720',
+    WALL_LIT: '#50617a',
+    FLOOR_DARK: '#0a0e14',
+    FLOOR_LIT: '#222d3d',
     PLAYER: '#58a6ff',
     GOBLIN: '#3fb950',
     ORC: '#d29922',
@@ -51,7 +51,7 @@ export const CONFIG = {
     TEXT_PURPLE: '#bc8cff'
   },
 
-  // Glyphs
+  // Glyphs for ASCII fallback
   GLYPHS: {
     WALL: '#',
     FLOOR: '.',

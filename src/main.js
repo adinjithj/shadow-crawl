@@ -26,7 +26,7 @@ export class Game {
     this.messages = [];
 
     this.initHeaderControls();
-    this.initGuideModal();
+    this.initGuideDrawer();
     this.initDpad();
     this.initFloor();
     this.setupInput();
@@ -58,25 +58,24 @@ export class Game {
     }
   }
 
-  initGuideModal() {
-    const modal = document.getElementById('guide-modal');
+  initGuideDrawer() {
+    const drawer = document.getElementById('in-game-guide');
     const guideBtn = document.getElementById('guide-btn');
-    const closeBtn = document.getElementById('close-modal-btn');
-    const startBtn = document.getElementById('start-game-btn');
+    const closeBtn = document.getElementById('close-guide-btn');
 
-    const openModal = () => {
-      if (modal) modal.classList.remove('hidden');
-    };
+    if (guideBtn && drawer) {
+      guideBtn.addEventListener('click', () => {
+        audio.init();
+        audio.playTone(480, 'sine', 0.08, 0.12);
+        drawer.classList.toggle('hidden');
+      });
+    }
 
-    const closeModal = () => {
-      if (modal) modal.classList.add('hidden');
-      audio.init();
-      audio.playTone(520, 'sine', 0.1, 0.15);
-    };
-
-    if (guideBtn) guideBtn.addEventListener('click', openModal);
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    if (startBtn) startBtn.addEventListener('click', closeModal);
+    if (closeBtn && drawer) {
+      closeBtn.addEventListener('click', () => {
+        drawer.classList.add('hidden');
+      });
+    }
   }
 
   initDpad() {
@@ -117,6 +116,11 @@ export class Game {
       msgElem.className = `log-entry log-${type}`;
       msgElem.textContent = message;
       logBox.appendChild(msgElem);
+
+      // Keep only last 5 visible lines
+      while (logBox.children.length > 5) {
+        logBox.removeChild(logBox.firstChild);
+      }
       logBox.scrollTop = logBox.scrollHeight;
     }
   }
@@ -182,7 +186,7 @@ export class Game {
 
     if (damage > 0) {
       this.log(`${attacker.name} strikes ${defender.name} for ${damage} damage!`, color);
-      this.display.addFloatingText(defender.x, defender.y, `-${damage}`, defender === this.player ? '#f85149' : '#e3b341');
+      this.display.addFloatingText(defender.x, defender.y, `-${damage}`, defender === this.player ? '#ef4444' : '#fbbf24');
 
       if (defender === this.player) {
         audio.playerHurt();
@@ -230,7 +234,7 @@ export class Game {
       this.player.baseDefense += 1;
       
       audio.levelUp();
-      this.display.addFloatingText(this.player.x, this.player.y, 'LEVEL UP!', '#3fb950');
+      this.display.addFloatingText(this.player.x, this.player.y, 'LEVEL UP!', '#22c55e');
       this.log(`Level Up! You are now Level ${this.player.level}! (+10 Max HP, +2 ATK, +1 DEF)`, 'gold');
     }
   }
@@ -252,8 +256,8 @@ export class Game {
         const healed = this.player.heal(healAmt);
         this.player.removeFromInventory(slotIndex);
         audio.potion();
-        this.display.addFloatingText(this.player.x, this.player.y, `+${healed} HP`, '#3fb950');
-        this.log(`You quaff the ${item.name} and restore ${healed} HP.`, 'success');
+        this.display.addFloatingText(this.player.x, this.player.y, `+${healed} HP`, '#22c55e');
+        this.log(`You drink ${item.name} (+${healed} HP).`, 'success');
         this.endTurn();
         break;
       }
@@ -278,8 +282,8 @@ export class Game {
 
         const dmg = item.options.damage || 25;
         target.takeDamage(dmg);
-        this.display.addFloatingText(target.x, target.y, `⚡ -${dmg}`, '#a371f7');
-        this.log(`Crackling lightning strikes ${target.name} for ${dmg} damage!`, 'purple');
+        this.display.addFloatingText(target.x, target.y, `⚡ -${dmg}`, '#c084fc');
+        this.log(`Lightning strikes ${target.name} for ${dmg} damage!`, 'purple');
 
         if (!target.isAlive) {
           audio.monsterDeath();
@@ -298,7 +302,7 @@ export class Game {
         this.player.removeFromInventory(slotIndex);
         audio.teleport();
         this.display.addFloatingText(this.player.x, this.player.y, 'TELEPORT!', '#38bdf8');
-        this.log('Reality bends... you reappear elsewhere in the dungeon!', 'cyan');
+        this.log('Reality bends... you reappear elsewhere!', 'cyan');
         this.endTurn();
         break;
       }
@@ -310,7 +314,7 @@ export class Game {
           this.player.addToInventory(oldWeapon);
         }
         audio.equip();
-        this.log(`Equipped weapon: ${item.name} (+${item.options.attackBonus || 0} ATK).`, 'cyan');
+        this.log(`Equipped ${item.name} (+${item.options.attackBonus || 0} ATK).`, 'cyan');
         this.updateUI();
         break;
       }
@@ -322,7 +326,7 @@ export class Game {
           this.player.addToInventory(oldArmor);
         }
         audio.equip();
-        this.log(`Equipped armor: ${item.name} (+${item.options.defenseBonus || 0} DEF).`, 'cyan');
+        this.log(`Equipped ${item.name} (+${item.options.defenseBonus || 0} DEF).`, 'cyan');
         this.updateUI();
         break;
       }
@@ -362,13 +366,13 @@ export class Game {
         this.player.gold += val;
         this.items.splice(itemIndex, 1);
         audio.gold();
-        this.display.addFloatingText(this.player.x, this.player.y, `+${val}g`, '#e3b341');
-        this.log(`You gathered ${val} gold coins.`, 'gold');
+        this.display.addFloatingText(this.player.x, this.player.y, `+${val}g`, '#fbbf24');
+        this.log(`Found ${val} gold coins.`, 'gold');
       } else if (item.type === ITEM_TYPES.AMULET) {
         this.items.splice(itemIndex, 1);
         audio.victory();
         this.isVictory = true;
-        this.log('You claim the Amulet of Yendor! You have conquered Shadow Crawl!', 'gold');
+        this.log('You claim the Amulet of Yendor! You conquered Shadow Crawl!', 'gold');
         this.updateUI();
         return;
       } else {
@@ -376,9 +380,9 @@ export class Game {
         if (added) {
           this.items.splice(itemIndex, 1);
           audio.equip();
-          this.log(`Picked up ${item.name}. (Press 1-5 to use/equip)`, 'success');
+          this.log(`Picked up ${item.name}. (Press 1-5 to use)`, 'success');
         } else {
-          this.log(`Inventory full! Cannot carry ${item.name}.`, 'muted');
+          this.log(`Satchel full! Cannot carry ${item.name}.`, 'muted');
         }
       }
     }
@@ -387,7 +391,7 @@ export class Game {
     if (this.map.stairsLocation && targetX === this.map.stairsLocation.x && targetY === this.map.stairsLocation.y) {
       this.dungeonFloor++;
       audio.stairs();
-      this.log(`You descend deeper into the darkness (Floor B${this.dungeonFloor})...`, 'gold');
+      this.log(`Descending to Floor B${this.dungeonFloor}...`, 'gold');
       this.initFloor();
       return;
     }
@@ -425,7 +429,7 @@ export class Game {
   updateUI() {
     const hpBar = document.getElementById('hp-bar');
     const hpText = document.getElementById('hp-text');
-    const floorText = document.getElementById('floor-text');
+    const floorBadge = document.getElementById('floor-badge');
     const turnText = document.getElementById('turn-text');
     const levelText = document.getElementById('level-text');
     const goldText = document.getElementById('gold-text');
@@ -436,7 +440,7 @@ export class Game {
       const hpPercent = Math.max(0, (this.player.hp / this.player.maxHp) * 100);
       if (hpBar) hpBar.style.width = `${hpPercent}%`;
       if (hpText) hpText.textContent = `${this.player.hp} / ${this.player.maxHp}`;
-      if (floorText) floorText.textContent = `B${this.dungeonFloor}`;
+      if (floorBadge) floorBadge.textContent = `FLOOR B${this.dungeonFloor}`;
       if (turnText) turnText.textContent = this.turnCount;
       if (levelText) levelText.textContent = `Lv ${this.player.level} (${this.player.xp}/${this.player.xpToNext} XP)`;
       if (goldText) goldText.textContent = `${this.player.gold}g`;
@@ -513,10 +517,11 @@ export class Game {
       }
     }
 
-    // 4. Render Monsters
+    // 4. Render Monsters & Monster Health Bars
     for (const monster of this.monsters) {
       if (monster.isAlive && this.map.tiles[monster.y][monster.x].visible) {
         this.display.drawTile(monster.x, monster.y, monster.monsterType, monster.char, monster.color);
+        this.display.drawMonsterHealthBar(monster.x, monster.y, monster.hp, monster.maxHp);
       }
     }
 
@@ -531,7 +536,7 @@ export class Game {
     // 7. Victory Screen
     if (this.isVictory) {
       const ctx = this.display.ctx;
-      ctx.fillStyle = 'rgba(5, 12, 25, 0.88)';
+      ctx.fillStyle = 'rgba(5, 12, 25, 0.90)';
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
       ctx.fillStyle = CONFIG.COLORS.AMULET;
@@ -540,7 +545,7 @@ export class Game {
 
       ctx.fillStyle = CONFIG.COLORS.TEXT_DEFAULT;
       ctx.font = `18px ${CONFIG.FONT_FAMILY}`;
-      ctx.fillText(`You conquered the dungeon in ${this.turnCount} turns with ${this.player.gold} gold!`, this.canvas.width / 2, this.canvas.height / 2 + 10);
+      ctx.fillText(`Conquered the dungeon in ${this.turnCount} turns with ${this.player.gold} gold!`, this.canvas.width / 2, this.canvas.height / 2 + 10);
 
       ctx.fillStyle = CONFIG.COLORS.TEXT_SUCCESS;
       ctx.fillText("Press 'R' to begin a new delve", this.canvas.width / 2, this.canvas.height / 2 + 50);
@@ -550,11 +555,11 @@ export class Game {
     // 8. Game Over Screen
     if (this.isGameOver) {
       const ctx = this.display.ctx;
-      ctx.fillStyle = 'rgba(10, 0, 0, 0.85)';
+      ctx.fillStyle = 'rgba(10, 0, 0, 0.88)';
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
       ctx.fillStyle = CONFIG.COLORS.TEXT_DANGER;
-      ctx.font = `bold 30px ${CONFIG.FONT_FAMILY}`;
+      ctx.font = `bold 32px ${CONFIG.FONT_FAMILY}`;
       ctx.fillText('YOU HAVE DIED', this.canvas.width / 2, this.canvas.height / 2 - 25);
 
       ctx.fillStyle = CONFIG.COLORS.TEXT_DEFAULT;

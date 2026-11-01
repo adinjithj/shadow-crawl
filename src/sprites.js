@@ -1,10 +1,10 @@
 /**
- * 2D Sprite Generator & Cache for Shadow Crawl.
- * Pre-renders crisp 2D pixel-art style sprites on offscreen canvases for 60fps rendering.
+ * High-Fidelity 2D Pixel-Art Sprite Renderer for Shadow Crawl.
+ * Procedurally generates 28x28 pixel-art sprites cached on offscreen canvases for silky 60fps rendering.
  */
 
 export class SpriteRenderer {
-  constructor(tileSize = 20) {
+  constructor(tileSize = 28) {
     this.size = tileSize;
     this.cache = new Map();
     this.initSprites();
@@ -45,55 +45,82 @@ export class SpriteRenderer {
     return this.cache.get(name) || null;
   }
 
-  // --- Environment Sprites ---
+  // --- Environment ---
 
   renderWall(isLit) {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Brick mortar base
-    ctx.fillStyle = isLit ? '#1b222d' : '#0e1218';
+    // Deep mortar background
+    ctx.fillStyle = isLit ? '#121822' : '#070a0e';
     ctx.fillRect(0, 0, s, s);
 
-    // Stone bricks (top row)
-    ctx.fillStyle = isLit ? '#455060' : '#1c222c';
-    ctx.fillRect(1, 1, Math.floor(s / 2) - 2, Math.floor(s / 2) - 2);
-    ctx.fillRect(Math.floor(s / 2), 1, Math.floor(s / 2) - 1, Math.floor(s / 2) - 2);
+    const brickColor = isLit ? '#3d4b5e' : '#141a24';
+    const highlightColor = isLit ? '#66778f' : '#222b3b';
+    const shadowColor = isLit ? '#273241' : '#0c1017';
 
-    // Stone bricks (bottom row - offset)
-    const midY = Math.floor(s / 2);
-    const quarterX = Math.floor(s / 4);
-    ctx.fillRect(1, midY, quarterX + 1, Math.floor(s / 2) - 2);
-    ctx.fillRect(quarterX + 3, midY, Math.floor(s / 2) - 1, Math.floor(s / 2) - 2);
-    ctx.fillRect(quarterX + Math.floor(s / 2) + 3, midY, quarterX - 1, Math.floor(s / 2) - 2);
+    // 3 Rows of beveled bricks
+    const rowH = 8;
+    for (let row = 0; row < 3; row++) {
+      const y = row * (rowH + 1);
+      const isOffset = row % 2 === 1;
+      const mid = Math.floor(s / 2);
 
-    // Highlights & Shadows
-    if (isLit) {
-      ctx.fillStyle = '#6e7f96';
-      ctx.fillRect(1, 1, s - 2, 1);
+      if (!isOffset) {
+        // Two equal bricks
+        this.drawBrick(ctx, 1, y + 1, mid - 2, rowH - 1, brickColor, highlightColor, shadowColor);
+        this.drawBrick(ctx, mid, y + 1, s - mid - 1, rowH - 1, brickColor, highlightColor, shadowColor);
+      } else {
+        // Three staggered bricks
+        const quarter = Math.floor(s / 4);
+        this.drawBrick(ctx, 1, y + 1, quarter, rowH - 1, brickColor, highlightColor, shadowColor);
+        this.drawBrick(ctx, quarter + 2, y + 1, mid - 1, rowH - 1, brickColor, highlightColor, shadowColor);
+        this.drawBrick(ctx, quarter + mid + 2, y + 1, quarter - 2, rowH - 1, brickColor, highlightColor, shadowColor);
+      }
     }
 
     return c;
+  }
+
+  drawBrick(ctx, x, y, w, h, base, hi, sh) {
+    if (w <= 0 || h <= 0) return;
+    ctx.fillStyle = base;
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = hi;
+    ctx.fillRect(x, y, w, 1);
+    ctx.fillRect(x, y, 1, h);
+    ctx.fillStyle = sh;
+    ctx.fillRect(x, y + h - 1, w, 1);
+    ctx.fillRect(x + w - 1, y, 1, h);
   }
 
   renderFloor(isLit) {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Stone tile base
-    ctx.fillStyle = isLit ? '#28313e' : '#10141a';
+    // Base flagstone
+    ctx.fillStyle = isLit ? '#1c2430' : '#0a0d13';
     ctx.fillRect(0, 0, s, s);
 
-    // Inner tile border / flagstone
-    ctx.fillStyle = isLit ? '#323e4e' : '#151b22';
+    // Stone tile body
+    ctx.fillStyle = isLit ? '#263140' : '#10151e';
     ctx.fillRect(1, 1, s - 2, s - 2);
 
-    // Subtle stone fleck
     if (isLit) {
-      ctx.fillStyle = '#414f64';
-      ctx.fillRect(3, 4, 2, 2);
-      ctx.fillRect(s - 6, s - 6, 2, 2);
-      ctx.fillStyle = '#1e252f';
+      // Subtle stone cross joint
+      ctx.fillStyle = '#1e2733';
+      ctx.fillRect(Math.floor(s / 2), 0, 1, s);
+      ctx.fillRect(0, Math.floor(s / 2), s, 1);
+
+      // Micro stone texture accents
+      ctx.fillStyle = '#344357';
+      ctx.fillRect(4, 5, 2, 2);
+      ctx.fillRect(s - 7, 6, 2, 2);
+      ctx.fillRect(6, s - 8, 2, 2);
+      ctx.fillRect(s - 8, s - 7, 2, 2);
+
+      // Edge shadow
+      ctx.fillStyle = '#141b24';
       ctx.fillRect(s - 1, 0, 1, s);
       ctx.fillRect(0, s - 1, s, 1);
     }
@@ -105,73 +132,88 @@ export class SpriteRenderer {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Base background
-    ctx.fillStyle = '#222b37';
+    // Pit base
+    ctx.fillStyle = '#06090e';
     ctx.fillRect(0, 0, s, s);
 
-    // 4 descending stone steps
-    const stepCount = 4;
-    const stepH = Math.floor(s / stepCount);
+    // 5 carved stone descending steps
+    const steps = 5;
+    const stepH = Math.floor(s / steps);
 
-    for (let i = 0; i < stepCount; i++) {
+    for (let i = 0; i < steps; i++) {
       const y = i * stepH;
-      // Step tread
-      ctx.fillStyle = i % 2 === 0 ? '#8b949e' : '#6e7681';
-      ctx.fillRect(2 + i, y, s - 4 - i * 2, stepH - 1);
-      // Dark pit depth
-      ctx.fillStyle = '#0d1117';
-      ctx.fillRect(2 + i, y + stepH - 1, s - 4 - i * 2, 1);
+      const inset = i * 2;
+      const w = s - inset * 2;
+
+      ctx.fillStyle = i % 2 === 0 ? '#6e7f96' : '#50617a';
+      ctx.fillRect(inset, y, w, stepH - 1);
+
+      ctx.fillStyle = '#121822';
+      ctx.fillRect(inset, y + stepH - 1, w, 1);
     }
 
-    // Downward arrow indicator
+    // Glowing downward amber chevron
     ctx.fillStyle = '#f0883e';
     ctx.beginPath();
     ctx.moveTo(s / 2, s - 4);
-    ctx.lineTo(s / 2 - 3, s - 8);
-    ctx.lineTo(s / 2 + 3, s - 8);
+    ctx.lineTo(s / 2 - 5, s - 11);
+    ctx.lineTo(s / 2 + 5, s - 11);
     ctx.closePath();
     ctx.fill();
 
     return c;
   }
 
-  // --- Character Sprites ---
+  // --- Characters ---
 
   renderHero() {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Knight Blue Cloak
-    ctx.fillStyle = '#1f6feb';
-    ctx.fillRect(3, 8, s - 6, 9);
+    // Crimson Cape
+    ctx.fillStyle = '#da3633';
+    ctx.fillRect(5, 11, s - 10, 13);
+    ctx.fillStyle = '#b62324';
+    ctx.fillRect(6, 13, s - 12, 10);
 
-    // Steel Armor / Breastplate
-    ctx.fillStyle = '#c9d1d9';
-    ctx.fillRect(5, 7, s - 10, 8);
-
-    // Steel Helmet
+    // Steel Plate Body
     ctx.fillStyle = '#8b949e';
-    ctx.fillRect(5, 2, s - 10, 6);
+    ctx.fillRect(7, 9, s - 14, 11);
+    ctx.fillStyle = '#c9d1d9';
+    ctx.fillRect(9, 10, s - 18, 9);
 
-    // Glowing Azure Visor slit
-    ctx.fillStyle = '#58a6ff';
-    ctx.fillRect(7, 4, s - 14, 2);
-
-    // Gold Trim / Belt
+    // Gold Belt & Buckle
     ctx.fillStyle = '#d29922';
-    ctx.fillRect(5, 12, s - 10, 2);
+    ctx.fillRect(8, 17, s - 16, 2);
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(s / 2 - 2, 16, 4, 4);
 
-    // Sword (Right Hand)
+    // Helmet with Visor
+    ctx.fillStyle = '#8b949e';
+    ctx.fillRect(7, 2, s - 14, 8);
+    ctx.fillStyle = '#c9d1d9';
+    ctx.fillRect(9, 3, s - 18, 5);
+
+    // Azure Glowing Visor
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(9, 5, s - 18, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(11, 5, 2, 2);
+
+    // Steel Longsword (Right hand)
     ctx.fillStyle = '#f0f6fc';
-    ctx.fillRect(s - 4, 3, 2, 10);
+    ctx.fillRect(s - 5, 3, 2, 17);
     ctx.fillStyle = '#d29922'; // crossguard
-    ctx.fillRect(s - 5, 11, 4, 2);
+    ctx.fillRect(s - 7, 15, 6, 2);
+    ctx.fillStyle = '#8b949e'; // hilt
+    ctx.fillRect(s - 5, 17, 2, 4);
 
-    // Shield (Left Hand)
-    ctx.fillStyle = '#388bfd';
-    ctx.fillRect(2, 6, 3, 8);
-    ctx.fillStyle = '#f0f6fc';
-    ctx.fillRect(3, 8, 1, 4);
+    // Knight Shield (Left hand)
+    ctx.fillStyle = '#1f6feb';
+    ctx.fillRect(3, 9, 4, 11);
+    ctx.fillStyle = '#ffffff'; // Cross insignia
+    ctx.fillRect(4, 11, 2, 7);
+    ctx.fillRect(3, 13, 4, 2);
 
     return c;
   }
@@ -180,31 +222,40 @@ export class SpriteRenderer {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Green Goblin Body
-    ctx.fillStyle = '#238636';
-    ctx.fillRect(5, 6, s - 10, 9);
-
-    // Pointy Ears
+    // Pointed Ears
     ctx.fillStyle = '#2ea043';
-    ctx.fillRect(2, 4, 3, 3);
-    ctx.fillRect(s - 5, 4, 3, 3);
+    ctx.beginPath();
+    ctx.moveTo(3, 8);
+    ctx.lineTo(8, 5);
+    ctx.lineTo(8, 11);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(s - 3, 8);
+    ctx.lineTo(s - 8, 5);
+    ctx.lineTo(s - 8, 11);
+    ctx.fill();
 
-    // Goblin Head
+    // Head
     ctx.fillStyle = '#3fb950';
-    ctx.fillRect(5, 3, s - 10, 6);
+    ctx.fillRect(7, 4, s - 14, 9);
 
-    // Evil Red Eyes
+    // Evil Glowing Eyes
     ctx.fillStyle = '#f85149';
-    ctx.fillRect(6, 5, 2, 2);
-    ctx.fillRect(s - 8, 5, 2, 2);
+    ctx.fillRect(9, 6, 3, 3);
+    ctx.fillRect(s - 12, 6, 3, 3);
+    ctx.fillStyle = '#fffa65';
+    ctx.fillRect(10, 7, 1, 1);
+    ctx.fillRect(s - 11, 7, 1, 1);
 
-    // Ragged Leather vest
-    ctx.fillStyle = '#5a3d28';
-    ctx.fillRect(5, 9, s - 10, 5);
+    // Ragged Leather Garb
+    ctx.fillStyle = '#5c4033';
+    ctx.fillRect(6, 12, s - 12, 11);
 
-    // Dagger
+    // Pointed Dagger
     ctx.fillStyle = '#8b949e';
-    ctx.fillRect(s - 3, 7, 2, 6);
+    ctx.fillRect(s - 4, 9, 2, 10);
+    ctx.fillStyle = '#2ea043'; // Poison tip
+    ctx.fillRect(s - 4, 9, 2, 2);
 
     return c;
   }
@@ -213,33 +264,36 @@ export class SpriteRenderer {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Dark Green Heavy Body
+    // Bulky Shoulders
     ctx.fillStyle = '#196c2e';
-    ctx.fillRect(3, 5, s - 6, 11);
+    ctx.fillRect(4, 8, s - 8, 15);
+
+    // Iron Brow Helm
+    ctx.fillStyle = '#484f58';
+    ctx.fillRect(6, 2, s - 12, 5);
+    ctx.fillStyle = '#6e7681';
+    ctx.fillRect(5, 5, 2, 3);
+    ctx.fillRect(s - 7, 5, 2, 3);
 
     // Head
     ctx.fillStyle = '#238636';
-    ctx.fillRect(4, 2, s - 8, 7);
+    ctx.fillRect(7, 5, s - 14, 8);
 
-    // Iron Brow / Helmet
-    ctx.fillStyle = '#484f58';
-    ctx.fillRect(4, 2, s - 8, 3);
-
-    // Piercing Amber Eyes
-    ctx.fillStyle = '#e3b341';
-    ctx.fillRect(6, 5, 2, 2);
-    ctx.fillRect(s - 8, 5, 2, 2);
+    // Piercing Red Eyes
+    ctx.fillStyle = '#f85149';
+    ctx.fillRect(9, 7, 3, 2);
+    ctx.fillRect(s - 12, 7, 3, 2);
 
     // White Tusks
-    ctx.fillStyle = '#f0f6fc';
-    ctx.fillRect(6, 8, 2, 2);
-    ctx.fillRect(s - 8, 8, 2, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(9, 11, 2, 3);
+    ctx.fillRect(s - 11, 11, 2, 3);
 
-    // Spiked Shoulder / Cleaver
-    ctx.fillStyle = '#6e7681';
-    ctx.fillRect(s - 4, 4, 3, 10);
-    ctx.fillStyle = '#f85149';
-    ctx.fillRect(s - 4, 4, 1, 1);
+    // Iron Cleaver
+    ctx.fillStyle = '#8b949e';
+    ctx.fillRect(s - 5, 4, 4, 15);
+    ctx.fillStyle = '#f85149'; // Blood stain
+    ctx.fillRect(s - 5, 4, 2, 2);
 
     return c;
   }
@@ -250,24 +304,29 @@ export class SpriteRenderer {
 
     // Ribcage
     ctx.fillStyle = '#c9d1d9';
-    ctx.fillRect(5, 8, s - 10, 7);
-    ctx.fillStyle = '#0d1117'; // Rib slits
-    ctx.fillRect(6, 9, s - 12, 1);
-    ctx.fillRect(6, 11, s - 12, 1);
-    ctx.fillRect(6, 13, s - 12, 1);
+    ctx.fillRect(7, 12, s - 14, 9);
+    ctx.fillStyle = '#0a0d13';
+    ctx.fillRect(9, 13, s - 18, 1);
+    ctx.fillRect(9, 15, s - 18, 1);
+    ctx.fillRect(9, 17, s - 18, 1);
 
     // Skull
     ctx.fillStyle = '#f0f6fc';
-    ctx.fillRect(5, 2, s - 10, 6);
+    ctx.fillRect(7, 3, s - 14, 9);
+    ctx.fillStyle = '#c9d1d9';
+    ctx.fillRect(9, 11, s - 18, 2);
 
-    // Hollow Dark Eyes
-    ctx.fillStyle = '#0d1117';
-    ctx.fillRect(7, 4, 2, 2);
-    ctx.fillRect(s - 9, 4, 2, 2);
+    // Dark Hollow Eyes with Blue Soulfire
+    ctx.fillStyle = '#06090e';
+    ctx.fillRect(9, 6, 3, 3);
+    ctx.fillRect(s - 12, 6, 3, 3);
+    ctx.fillStyle = '#58a6ff';
+    ctx.fillRect(10, 7, 1, 1);
+    ctx.fillRect(s - 11, 7, 1, 1);
 
-    // Bone / Iron Blade
-    ctx.fillStyle = '#8b949e';
-    ctx.fillRect(s - 3, 2, 2, 12);
+    // Bone Blade
+    ctx.fillStyle = '#c9d1d9';
+    ctx.fillRect(s - 4, 4, 2, 17);
 
     return c;
   }
@@ -276,30 +335,38 @@ export class SpriteRenderer {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Dark Dragon Wings
-    ctx.fillStyle = '#4c2889';
-    ctx.fillRect(1, 4, 4, 8);
-    ctx.fillRect(s - 5, 4, 4, 8);
+    // Spread Dragon Wings
+    ctx.fillStyle = '#3c1e70';
+    ctx.beginPath();
+    ctx.moveTo(2, 6);
+    ctx.lineTo(8, 12);
+    ctx.lineTo(2, 18);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(s - 2, 6);
+    ctx.lineTo(s - 8, 12);
+    ctx.lineTo(s - 2, 18);
+    ctx.fill();
 
-    // Scaled Body
-    ctx.fillStyle = '#6e40c9';
-    ctx.fillRect(5, 5, s - 10, 10);
+    // Dragon Body
+    ctx.fillStyle = '#5a2da8';
+    ctx.fillRect(7, 6, s - 14, 15);
 
     // Horned Head
-    ctx.fillStyle = '#8957e5';
-    ctx.fillRect(5, 2, s - 10, 6);
+    ctx.fillStyle = '#7a3ee0';
+    ctx.fillRect(7, 2, s - 14, 9);
     ctx.fillStyle = '#f78166'; // Horns
-    ctx.fillRect(4, 1, 2, 3);
-    ctx.fillRect(s - 6, 1, 2, 3);
+    ctx.fillRect(5, 0, 3, 4);
+    ctx.fillRect(s - 8, 0, 3, 4);
 
     // Flaming Eyes
-    ctx.fillStyle = '#ffa657';
-    ctx.fillRect(7, 4, 2, 2);
-    ctx.fillRect(s - 9, 4, 2, 2);
-
-    // Fire breath ember
     ctx.fillStyle = '#ff7b72';
-    ctx.fillRect(s / 2 - 1, 8, 2, 2);
+    ctx.fillRect(9, 5, 3, 2);
+    ctx.fillRect(s - 12, 5, 3, 2);
+
+    // Embers
+    ctx.fillStyle = '#ffa657';
+    ctx.fillRect(s / 2 - 1, 10, 2, 2);
 
     return c;
   }
@@ -308,65 +375,78 @@ export class SpriteRenderer {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Shadow Aura
+    // Dark Crimson Aura
     ctx.fillStyle = 'rgba(255, 0, 85, 0.25)';
-    ctx.fillRect(1, 1, s - 2, s - 2);
+    ctx.fillRect(0, 0, s, s);
 
-    // Dark Demonic Cloak
-    ctx.fillStyle = '#21000f';
-    ctx.fillRect(3, 4, s - 6, 13);
+    // Shadow Cloak
+    ctx.fillStyle = '#1a000c';
+    ctx.fillRect(4, 6, s - 8, 19);
 
-    // Crimson Horns
+    // Colossal Horns
     ctx.fillStyle = '#ff0055';
-    ctx.fillRect(2, 0, 3, 5);
-    ctx.fillRect(s - 5, 0, 3, 5);
+    ctx.beginPath();
+    ctx.moveTo(3, 0);
+    ctx.lineTo(8, 5);
+    ctx.lineTo(4, 9);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(s - 3, 0);
+    ctx.lineTo(s - 8, 5);
+    ctx.lineTo(s - 4, 9);
+    ctx.fill();
 
-    // Demon Head & Crown
-    ctx.fillStyle = '#49001b';
-    ctx.fillRect(5, 3, s - 10, 7);
-    ctx.fillStyle = '#d29922'; // Barbed Gold Crown
-    ctx.fillRect(5, 2, s - 10, 2);
-    ctx.fillRect(s / 2 - 1, 1, 2, 2);
-
-    // Burning Malevolent Eyes
-    ctx.fillStyle = '#ff2a70';
-    ctx.fillRect(6, 5, 2, 2);
-    ctx.fillRect(s - 8, 5, 2, 2);
-
-    // Soul Scythe / Blade
+    // Crown of Skulls
+    ctx.fillStyle = '#d29922';
+    ctx.fillRect(6, 3, s - 12, 3);
     ctx.fillStyle = '#ff0055';
-    ctx.fillRect(s - 3, 1, 2, 14);
+    ctx.fillRect(s / 2 - 1, 1, 3, 3);
+
+    // Demon Face
+    ctx.fillStyle = '#380015';
+    ctx.fillRect(6, 5, s - 12, 9);
+
+    // Burning Red Eyes
+    ctx.fillStyle = '#ff0055';
+    ctx.fillRect(8, 7, 3, 3);
+    ctx.fillRect(s - 11, 7, 3, 3);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(9, 8, 1, 1);
+    ctx.fillRect(s - 10, 8, 1, 1);
+
+    // Soulfire Scythe
+    ctx.fillStyle = '#ff0055';
+    ctx.fillRect(s - 4, 1, 2, 22);
+    ctx.fillRect(s - 7, 1, 5, 3);
 
     return c;
   }
 
-  // --- Item Sprites ---
+  // --- Items ---
 
   renderPotion() {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Wooden Cork
+    // Cork Stopper
     ctx.fillStyle = '#8b5a2b';
-    ctx.fillRect(s / 2 - 2, 2, 4, 2);
+    ctx.fillRect(s / 2 - 3, 3, 6, 3);
 
     // Glass Neck
-    ctx.fillStyle = '#c9d1d9';
-    ctx.fillRect(s / 2 - 1, 4, 2, 2);
+    ctx.fillStyle = '#8b949e';
+    ctx.fillRect(s / 2 - 2, 6, 4, 3);
 
-    // Flask Glass Body
+    // Flask Body
     ctx.fillStyle = '#f85149';
     ctx.beginPath();
-    ctx.arc(s / 2, s / 2 + 2, s / 3, 0, Math.PI * 2);
+    ctx.arc(s / 2, s / 2 + 3, 8, 0, Math.PI * 2);
     ctx.fill();
 
-    // Liquid Highlight / Bubble
-    ctx.fillStyle = '#ffa198';
-    ctx.fillRect(s / 2 - 2, s / 2, 2, 2);
-
-    // Glass sheen
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.fillRect(s / 2 + 1, s / 2 - 1, 2, 4);
+    // Liquid Highlight
+    ctx.fillStyle = '#ff7b72';
+    ctx.fillRect(s / 2 - 4, s / 2 + 1, 3, 3);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(s / 2 + 2, s / 2, 2, 4);
 
     return c;
   }
@@ -375,20 +455,20 @@ export class SpriteRenderer {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Rolled Parchment
-    ctx.fillStyle = '#d8b67b';
-    ctx.fillRect(3, 4, s - 6, 12);
+    // Parchment Body
+    ctx.fillStyle = '#e3b341';
+    ctx.fillRect(5, 5, s - 10, 18);
 
-    // Edges
-    ctx.fillStyle = '#bfa065';
-    ctx.fillRect(2, 4, 2, 12);
-    ctx.fillRect(s - 4, 4, 2, 12);
+    // Spindle Roll Edges
+    ctx.fillStyle = '#8b5a2b';
+    ctx.fillRect(3, 5, 2, 18);
+    ctx.fillRect(s - 5, 5, 2, 18);
 
-    // Purple Ribbon Tie
+    // Violet Ribbon
     ctx.fillStyle = '#a371f7';
-    ctx.fillRect(3, s / 2 - 1, s - 6, 3);
-    ctx.fillStyle = '#8957e5';
-    ctx.fillRect(s / 2 - 2, s / 2 - 2, 4, 5);
+    ctx.fillRect(5, s / 2 - 2, s - 10, 4);
+    ctx.fillStyle = '#7a3ee0';
+    ctx.fillRect(s / 2 - 3, s / 2 - 3, 6, 6);
 
     return c;
   }
@@ -399,20 +479,20 @@ export class SpriteRenderer {
 
     // Diagonal Blade
     ctx.strokeStyle = '#f0f6fc';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(s - 4, 4);
-    ctx.lineTo(6, s - 6);
+    ctx.moveTo(s - 5, 5);
+    ctx.lineTo(8, s - 8);
     ctx.stroke();
 
-    // Crossguard
+    // Golden Crossguard
     ctx.fillStyle = '#d29922';
-    ctx.fillRect(5, s - 9, 5, 2);
-    ctx.fillRect(7, s - 7, 2, 5);
+    ctx.fillRect(6, s - 12, 7, 3);
+    ctx.fillRect(9, s - 10, 3, 6);
 
-    // Pommel gem
+    // Sapphire Pommel
     ctx.fillStyle = '#58a6ff';
-    ctx.fillRect(8, s - 3, 2, 2);
+    ctx.fillRect(9, s - 4, 3, 3);
 
     return c;
   }
@@ -421,23 +501,22 @@ export class SpriteRenderer {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Steel Cuirass Breastplate
+    // Steel Breastplate
     ctx.fillStyle = '#8b949e';
-    ctx.fillRect(4, 4, s - 8, 12);
+    ctx.fillRect(6, 6, s - 12, 16);
 
     // Shoulder Pauldrons
     ctx.fillStyle = '#c9d1d9';
-    ctx.fillRect(2, 4, 4, 4);
-    ctx.fillRect(s - 6, 4, 4, 4);
+    ctx.fillRect(3, 6, 5, 6);
+    ctx.fillRect(s - 8, 6, 5, 6);
 
-    // Chest Plating Center Highlight
+    // Center Ridge Highlight
     ctx.fillStyle = '#f0f6fc';
-    ctx.fillRect(s / 2 - 1, 5, 2, 9);
+    ctx.fillRect(s / 2 - 1, 7, 2, 14);
 
     // Gold Buckles
     ctx.fillStyle = '#d29922';
-    ctx.fillRect(4, 9, s - 8, 1);
-    ctx.fillRect(4, 13, s - 8, 1);
+    ctx.fillRect(6, 12, s - 12, 2);
 
     return c;
   }
@@ -446,27 +525,25 @@ export class SpriteRenderer {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Coin 1 (Bottom Left)
+    // Coins Stack
     ctx.fillStyle = '#d29922';
     ctx.beginPath();
-    ctx.arc(s / 2 - 3, s / 2 + 2, 4, 0, Math.PI * 2);
+    ctx.arc(s / 2 - 4, s / 2 + 4, 6, 0, Math.PI * 2);
     ctx.fill();
 
-    // Coin 2 (Bottom Right)
     ctx.fillStyle = '#e3b341';
     ctx.beginPath();
-    ctx.arc(s / 2 + 3, s / 2 + 3, 4, 0, Math.PI * 2);
+    ctx.arc(s / 2 + 4, s / 2 + 4, 6, 0, Math.PI * 2);
     ctx.fill();
 
-    // Coin 3 (Top Front)
     ctx.fillStyle = '#ffd700';
     ctx.beginPath();
-    ctx.arc(s / 2, s / 2 - 2, 4, 0, Math.PI * 2);
+    ctx.arc(s / 2, s / 2 - 2, 6, 0, Math.PI * 2);
     ctx.fill();
 
-    // Sparkle Glint
+    // Sparkle
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(s / 2 - 1, s / 2 - 4, 2, 2);
+    ctx.fillRect(s / 2 - 2, s / 2 - 5, 3, 3);
 
     return c;
   }
@@ -475,28 +552,28 @@ export class SpriteRenderer {
     const { c, ctx } = this.createCanvas();
     const s = this.size;
 
-    // Gold Chain
+    // Golden Chain
     ctx.strokeStyle = '#d29922';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(s / 2, 5, 5, 0, Math.PI);
+    ctx.arc(s / 2, 7, 7, 0, Math.PI);
     ctx.stroke();
 
-    // Gold Medallion Base
+    // Golden Medallion
     ctx.fillStyle = '#ffd700';
     ctx.beginPath();
-    ctx.arc(s / 2, s / 2 + 2, 6, 0, Math.PI * 2);
+    ctx.arc(s / 2, s / 2 + 3, 8, 0, Math.PI * 2);
     ctx.fill();
 
-    // Radiant Cyan Gem Center
+    // Radiant Cyan Core
     ctx.fillStyle = '#38bdf8';
     ctx.beginPath();
-    ctx.arc(s / 2, s / 2 + 2, 3, 0, Math.PI * 2);
+    ctx.arc(s / 2, s / 2 + 3, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Magic Shimmer
+    // Sparkle Glint
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(s / 2 - 1, s / 2 + 1, 2, 2);
+    ctx.fillRect(s / 2 - 1, s / 2 + 2, 2, 2);
 
     return c;
   }
