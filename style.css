@@ -104,6 +104,17 @@ body {
   background-color: #264766;
 }
 
+.gfx-btn {
+  background-color: #2a1f4d;
+  border-color: #a371f7;
+  color: #d2a8ff;
+  font-weight: 600;
+}
+
+.gfx-btn:hover {
+  background-color: #3b2a6b;
+}
+
 #stats-panel {
   display: flex;
   align-items: center;

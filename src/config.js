@@ -3,32 +3,32 @@
  */
 export const CONFIG = {
   // Grid dimensions (in tiles)
-  MAP_WIDTH: 70,
-  MAP_HEIGHT: 30,
+  MAP_WIDTH: 48,
+  MAP_HEIGHT: 24,
 
-  // Tile rendering dimensions (pixels per character)
-  TILE_WIDTH: 14,
-  TILE_HEIGHT: 22,
+  // Tile rendering dimensions (pixels per character/sprite)
+  TILE_WIDTH: 20,
+  TILE_HEIGHT: 20,
   FONT_FAMILY: '"JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, monospace',
-  FONT_SIZE: 18,
+  FONT_SIZE: 15,
 
   // Dungeon Generation Settings
-  MAX_ROOMS: 15,
-  ROOM_MIN_SIZE: 6,
-  ROOM_MAX_SIZE: 12,
+  MAX_ROOMS: 12,
+  ROOM_MIN_SIZE: 5,
+  ROOM_MAX_SIZE: 10,
   MAX_MONSTERS_PER_ROOM: 2,
   MAX_ITEMS_PER_ROOM: 2,
   MAX_DUNGEON_FLOORS: 5,
 
   // Visual Palette
   COLORS: {
-    BACKGROUND: '#0d1117',
-    PANEL_BG: '#161b22',
-    BORDER: '#30363d',
-    WALL_DARK: '#21262d',
-    WALL_LIT: '#8b949e',
-    FLOOR_DARK: '#161b22',
-    FLOOR_LIT: '#484f58',
+    BACKGROUND: '#090d13',
+    PANEL_BG: '#121722',
+    BORDER: '#262e3d',
+    WALL_DARK: '#1c222c',
+    WALL_LIT: '#6e7f96',
+    FLOOR_DARK: '#10141a',
+    FLOOR_LIT: '#323e4e',
     PLAYER: '#58a6ff',
     GOBLIN: '#3fb950',
     ORC: '#d29922',
@@ -43,7 +43,7 @@ export const CONFIG = {
     GOLD: '#e3b341',
     AMULET: '#ffd700',
     TEXT_DEFAULT: '#c9d1d9',
-    TEXT_MUTED: '#8b949e',
+    TEXT_MUTED: '#7d8590',
     TEXT_DANGER: '#f85149',
     TEXT_SUCCESS: '#3fb950',
     TEXT_GOLD: '#d29922',

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shadow Crawl — A Traditional ASCII Roguelike</title>
+  <title>Shadow Crawl — A Traditional ASCII & 2D Roguelike</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,6 +16,7 @@
           <h1>SHADOW CRAWL</h1>
         </div>
         <button id="guide-btn" class="header-btn guide-btn">📖 How to Play</button>
+        <button id="gfx-toggle-btn" class="header-btn gfx-btn" title="Toggle between 2D Sprites and Classic ASCII">🎨 2D Sprites</button>
         <button id="audio-toggle-btn" class="header-btn" title="Toggle 8-bit Sound Effects">🔊 Sound: ON</button>
       </div>
 
@@ -108,12 +109,12 @@
             <span class="desc">Restart on Death</span>
           </div>
           <div class="legend-row">
-            <span class="glyph hero">@</span> You &nbsp;|&nbsp;
+            <span class="glyph hero">@</span> Knight &nbsp;|&nbsp;
             <span class="glyph goblin">g</span> Goblin &nbsp;|&nbsp;
             <span class="glyph orc">o</span> Orc &nbsp;|&nbsp;
             <span class="glyph skeleton">s</span> Skeleton &nbsp;|&nbsp;
             <span class="glyph drake">D</span> Drake &nbsp;|&nbsp;
-            <span class="glyph boss">Ω</span> Boss
+            <span class="glyph boss">Ω</span> Malakor
           </div>
           <div class="legend-row">
             <span class="glyph potion">!</span> Potion &nbsp;|&nbsp;
@@ -139,8 +140,8 @@
         <div class="guide-step">
           <div class="step-num">1</div>
           <div class="step-text">
-            <strong>You are the <span class="glyph hero">@</span> symbol</strong>:
-            This is a turn-based dungeon crawler. The world only moves when <em>you</em> take a step. Take all the time you need to plan your moves!
+            <strong>Turn-Based Exploration</strong>:
+            You control the brave Knight. The dungeon only takes a turn when <em>you</em> take a turn. Take all the time you need to plan your moves!
           </div>
         </div>
 
@@ -157,8 +158,8 @@
           <div class="step-num">3</div>
           <div class="step-text">
             <strong>Gather Loot & Manage Satchel</strong>:
-            Step over Potions (<span class="glyph potion">!</span>), Scrolls (<span class="glyph scroll">?</span>), Weapons (<span class="glyph weapon">/</span>), Armor (<span class="glyph armor">]</span>), or Gold (<span class="glyph gold">$</span>).
-            Press <span class="key">1</span> through <span class="key">5</span> or click the slot to drink a potion, cast lightning, or equip gear!
+            Step over Potions, Scrolls, Weapons, Armor, or Gold.
+            Press <span class="key">1</span> through <span class="key">5</span> (or click the slot) to drink a potion, cast lightning, or equip gear!
           </div>
         </div>
 
@@ -166,7 +167,7 @@
           <div class="step-num">4</div>
           <div class="step-text">
             <strong>The Objective</strong>:
-            Find the stone stairs (<span class="glyph stairs">&gt;</span>) in each floor to descend deeper into the crypts. Reach Floor <strong>B5</strong>, defeat the <strong>Shadow Lord Malakor</strong> (<span class="glyph boss">Ω</span>), and claim the <strong>Amulet of Yendor</strong> (<span class="glyph amulet">*</span>) to win!
+            Find the stone stairs in each floor to descend deeper. Reach Floor <strong>B5</strong>, defeat <strong>Shadow Lord Malakor</strong>, and claim the <strong>Amulet of Yendor</strong> to win!
           </div>
         </div>
       </div>

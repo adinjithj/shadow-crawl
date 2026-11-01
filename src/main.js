@@ -25,7 +25,7 @@ export class Game {
     // Message Log
     this.messages = [];
 
-    this.initAudioButton();
+    this.initHeaderControls();
     this.initGuideModal();
     this.initDpad();
     this.initFloor();
@@ -33,7 +33,8 @@ export class Game {
     this.startAnimationLoop();
   }
 
-  initAudioButton() {
+  initHeaderControls() {
+    // Audio button
     const audioBtn = document.getElementById('audio-toggle-btn');
     if (audioBtn) {
       audioBtn.textContent = audio.muted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
@@ -41,6 +42,18 @@ export class Game {
         audio.init();
         const isMuted = audio.toggleMute();
         audioBtn.textContent = isMuted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
+      });
+    }
+
+    // Graphics mode toggle button
+    const gfxBtn = document.getElementById('gfx-toggle-btn');
+    if (gfxBtn) {
+      gfxBtn.textContent = this.display.mode === 'sprites' ? '🎨 2D Sprites' : '🔤 Retro ASCII';
+      gfxBtn.addEventListener('click', () => {
+        audio.init();
+        audio.playTone(500, 'triangle', 0.05, 0.1);
+        const mode = this.display.toggleGraphicsMode();
+        gfxBtn.textContent = mode === 'sprites' ? '🎨 2D Sprites' : '🔤 Retro ASCII';
       });
     }
   }
@@ -466,11 +479,13 @@ export class Game {
         const tile = this.map.tiles[y][x];
 
         if (tile.visible) {
-          const color = tile.type === CONFIG.GLYPHS.WALL ? CONFIG.COLORS.WALL_LIT : CONFIG.COLORS.FLOOR_LIT;
-          this.display.draw(x, y, tile.type, color);
+          const spriteKey = tile.type === CONFIG.GLYPHS.WALL ? 'wall_lit' : 'floor_lit';
+          const asciiColor = tile.type === CONFIG.GLYPHS.WALL ? CONFIG.COLORS.WALL_LIT : CONFIG.COLORS.FLOOR_LIT;
+          this.display.drawTile(x, y, spriteKey, tile.type, asciiColor);
         } else if (tile.explored) {
-          const color = tile.type === CONFIG.GLYPHS.WALL ? CONFIG.COLORS.WALL_DARK : CONFIG.COLORS.FLOOR_DARK;
-          this.display.draw(x, y, tile.type, color);
+          const spriteKey = tile.type === CONFIG.GLYPHS.WALL ? 'wall_dark' : 'floor_dark';
+          const asciiColor = tile.type === CONFIG.GLYPHS.WALL ? CONFIG.COLORS.WALL_DARK : CONFIG.COLORS.FLOOR_DARK;
+          this.display.drawTile(x, y, spriteKey, tile.type, asciiColor);
         }
       }
     }
@@ -480,27 +495,34 @@ export class Game {
       const sx = this.map.stairsLocation.x;
       const sy = this.map.stairsLocation.y;
       if (this.map.tiles[sy][sx].visible || this.map.tiles[sy][sx].explored) {
-        this.display.draw(sx, sy, CONFIG.GLYPHS.STAIRS_DOWN, CONFIG.COLORS.STAIRS);
+        this.display.drawTile(sx, sy, 'stairs', CONFIG.GLYPHS.STAIRS_DOWN, CONFIG.COLORS.STAIRS);
       }
     }
 
     // 3. Render Items
     for (const item of this.items) {
       if (this.map.tiles[item.y][item.x].visible) {
-        this.display.draw(item.x, item.y, item.char, item.color);
+        let spriteKey = 'potion';
+        if (item.type === ITEM_TYPES.SCROLL_LIGHTNING || item.type === ITEM_TYPES.SCROLL_TELEPORT) spriteKey = 'scroll';
+        if (item.type === ITEM_TYPES.WEAPON) spriteKey = 'weapon';
+        if (item.type === ITEM_TYPES.ARMOR) spriteKey = 'armor';
+        if (item.type === ITEM_TYPES.GOLD) spriteKey = 'gold';
+        if (item.type === ITEM_TYPES.AMULET) spriteKey = 'amulet';
+
+        this.display.drawTile(item.x, item.y, spriteKey, item.char, item.color);
       }
     }
 
     // 4. Render Monsters
     for (const monster of this.monsters) {
       if (monster.isAlive && this.map.tiles[monster.y][monster.x].visible) {
-        this.display.draw(monster.x, monster.y, monster.char, monster.color);
+        this.display.drawTile(monster.x, monster.y, monster.monsterType, monster.char, monster.color);
       }
     }
 
     // 5. Render Player
     if (this.player && this.player.isAlive) {
-      this.display.draw(this.player.x, this.player.y, this.player.char, this.player.color);
+      this.display.drawTile(this.player.x, this.player.y, 'hero', this.player.char, this.player.color);
     }
 
     // 6. Floating Damage / FX Text

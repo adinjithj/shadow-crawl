@@ -1,7 +1,8 @@
 import { CONFIG } from './config.js';
+import { SpriteRenderer } from './sprites.js';
 
 /**
- * Grid-based Monospace ASCII Canvas Renderer with visual FX & floating combat text.
+ * High-performance Dual-Mode Canvas Renderer (2D Sprites & Retro ASCII).
  */
 export class Display {
   /**
@@ -20,8 +21,12 @@ export class Display {
     this.canvas.width = this.width * this.tileWidth;
     this.canvas.height = this.height * this.tileHeight;
 
+    // Sprite Cache & Rendering Mode
+    this.sprites = new SpriteRenderer(this.tileWidth);
+    this.mode = localStorage.getItem('shadow_crawl_gfx') || 'sprites'; // 'sprites' | 'ascii'
+
     // Configure text rendering
-    this.ctx.font = `${CONFIG.FONT_SIZE}px ${CONFIG.FONT_FAMILY}`;
+    this.ctx.font = `bold ${CONFIG.FONT_SIZE}px ${CONFIG.FONT_FAMILY}`;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.imageSmoothingEnabled = false;
@@ -31,7 +36,13 @@ export class Display {
     this.shakeIntensity = 0;
   }
 
-  triggerShake(intensity = 6) {
+  toggleGraphicsMode() {
+    this.mode = this.mode === 'sprites' ? 'ascii' : 'sprites';
+    localStorage.setItem('shadow_crawl_gfx', this.mode);
+    return this.mode;
+  }
+
+  triggerShake(intensity = 5) {
     this.shakeIntensity = intensity;
   }
 
@@ -46,9 +57,6 @@ export class Display {
     });
   }
 
-  /**
-   * Clear the entire canvas with background color and apply screen shake if active.
-   */
   clear() {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.fillStyle = CONFIG.COLORS.BACKGROUND;
@@ -63,13 +71,43 @@ export class Display {
   }
 
   /**
-   * Draw a character glyph at grid coordinates (x, y).
+   * Draw a 2D Sprite if mode is 'sprites', or fall back to ASCII text glyph.
    * @param {number} x Grid X coordinate
    * @param {number} y Grid Y coordinate
-   * @param {string} char Character glyph to draw
-   * @param {string} fgColor Foreground text color
-   * @param {string} [bgColor] Optional background tile color
+   * @param {string} spriteName Key in sprite cache
+   * @param {string} fallbackChar Character glyph if in ASCII mode
+   * @param {string} fgColor Foreground color for ASCII
+   * @param {string} [bgColor] Background color
    */
+  drawTile(x, y, spriteName, fallbackChar, fgColor = CONFIG.COLORS.TEXT_DEFAULT, bgColor = null) {
+    if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
+
+    const px = x * this.tileWidth;
+    const py = y * this.tileHeight;
+
+    if (this.mode === 'sprites') {
+      const sprite = this.sprites.get(spriteName);
+      if (sprite) {
+        this.ctx.drawImage(sprite, px, py);
+        return;
+      }
+    }
+
+    // ASCII fallback or selected mode
+    if (bgColor) {
+      this.ctx.fillStyle = bgColor;
+      this.ctx.fillRect(px, py, this.tileWidth, this.tileHeight);
+    }
+
+    this.ctx.fillStyle = fgColor;
+    this.ctx.font = `bold ${CONFIG.FONT_SIZE}px ${CONFIG.FONT_FAMILY}`;
+    this.ctx.fillText(
+      fallbackChar,
+      px + this.tileWidth / 2,
+      py + this.tileHeight / 2 + 1
+    );
+  }
+
   draw(x, y, char, fgColor = CONFIG.COLORS.TEXT_DEFAULT, bgColor = null) {
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) return;
 
@@ -82,6 +120,7 @@ export class Display {
     }
 
     this.ctx.fillStyle = fgColor;
+    this.ctx.font = `bold ${CONFIG.FONT_SIZE}px ${CONFIG.FONT_FAMILY}`;
     this.ctx.fillText(
       char,
       px + this.tileWidth / 2,
