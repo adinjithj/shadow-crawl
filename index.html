@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shadow Crawl — A Traditional ASCII Roguelike</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+    <!-- Header -->
+    <header id="game-header">
+      <div class="logo">
+        <span class="icon">⚔</span>
+        <h1>SHADOW CRAWL</h1>
+      </div>
+      <div id="stats-panel">
+        <div class="stat-group">
+          <span class="stat-label">FLOOR</span>
+          <span id="floor-text" class="stat-val highlight">B1</span>
+        </div>
+        <div class="stat-group">
+          <span class="stat-label">HERO</span>
+          <span id="level-text" class="stat-val">Lv 1 (0/100 XP)</span>
+        </div>
+        <div class="stat-group hp-group">
+          <div class="hp-label-row">
+            <span class="stat-label">HP</span>
+            <span id="hp-text" class="stat-val">30 / 30</span>
+          </div>
+          <div class="hp-bar-bg">
+            <div id="hp-bar" class="hp-bar-fill"></div>
+          </div>
+        </div>
+        <div class="stat-group">
+          <span class="stat-label">TURNS</span>
+          <span id="turn-text" class="stat-val">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Viewport -->
+    <main id="viewport-wrapper">
+      <canvas id="game-canvas"></canvas>
+    </main>
+
+    <!-- Bottom Footer Panels -->
+    <footer id="game-footer">
+      <div class="panel log-panel">
+        <div class="panel-title">CHRONICLE</div>
+        <div id="log-box" class="log-container"></div>
+      </div>
+      <div class="panel controls-panel">
+        <div class="panel-title">CONTROLS & LEGEND</div>
+        <div class="controls-content">
+          <div class="control-row">
+            <span class="key">W A S D</span> / <span class="key">Arrows</span>
+            <span class="desc">Move / Bump Attack</span>
+          </div>
+          <div class="control-row">
+            <span class="key">Space</span> / <span class="key">.</span>
+            <span class="desc">Wait 1 Turn</span>
+          </div>
+          <div class="control-row">
+            <span class="key">R</span>
+            <span class="desc">Restart on Death</span>
+          </div>
+          <div class="legend-row">
+            <span class="glyph hero">@</span> Hero &nbsp;|&nbsp;
+            <span class="glyph goblin">g</span> Goblin &nbsp;|&nbsp;
+            <span class="glyph orc">o</span> Orc &nbsp;|&nbsp;
+            <span class="glyph potion">!</span> Potion &nbsp;|&nbsp;
+            <span class="glyph stairs">&gt;</span> Stairs Down
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

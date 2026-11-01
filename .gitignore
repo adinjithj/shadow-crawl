@@ -1,0 +1,20 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Logs and Environment
+*.log
+.env
+.env.local
+
+# Node & Build artifacts (if ever used)
+node_modules/
+dist/
+
+# Graphify output
+graphify-out/
+.graphify/
+
+# Editor directories
+.vscode/
+.idea/

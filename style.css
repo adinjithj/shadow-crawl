@@ -1,0 +1,231 @@
+:root {
+  --bg-dark: #090d13;
+  --panel-bg: #131822;
+  --border-color: #262e3d;
+  --accent-cyan: #58a6ff;
+  --accent-gold: #d29922;
+  --accent-green: #3fb950;
+  --accent-red: #f85149;
+  --text-primary: #e6edf3;
+  --text-muted: #7d8590;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 16px;
+  user-select: none;
+}
+
+#game-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  max-width: 1020px;
+  width: 100%;
+}
+
+/* Header */
+#game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo .icon {
+  font-size: 1.4rem;
+  color: var(--accent-gold);
+}
+
+.logo h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+}
+
+#stats-panel {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.stat-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+.stat-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.stat-val.highlight {
+  color: var(--accent-cyan);
+}
+
+.hp-group {
+  min-width: 140px;
+}
+
+.hp-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.hp-bar-bg {
+  width: 100%;
+  height: 8px;
+  background-color: #21262d;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #30363d;
+}
+
+.hp-bar-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #238636, #3fb950);
+  transition: width 0.2s ease-in-out;
+}
+
+/* Viewport */
+#viewport-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #05070a;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+canvas#game-canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* Footer / Panels */
+#game-footer {
+  display: grid;
+  grid-template-columns: 1.6fr 1.2fr;
+  gap: 12px;
+  height: 140px;
+}
+
+.panel {
+  background-color: #0b0f16;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+}
+
+.panel-title {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.log-container {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.log-entry.log-danger {
+  color: var(--accent-red);
+}
+
+.log-entry.log-success {
+  color: var(--accent-green);
+}
+
+.log-entry.log-gold {
+  color: var(--accent-gold);
+}
+
+.log-entry.log-muted {
+  color: var(--text-muted);
+}
+
+.controls-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.control-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.control-row .key {
+  background-color: #1f2735;
+  border: 1px solid #364154;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  color: var(--accent-cyan);
+}
+
+.control-row .desc {
+  color: var(--text-muted);
+}
+
+.legend-row {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.glyph.hero { color: var(--accent-cyan); font-weight: bold; }
+.glyph.goblin { color: var(--accent-green); font-weight: bold; }
+.glyph.orc { color: var(--accent-gold); font-weight: bold; }
+.glyph.potion { color: var(--accent-red); font-weight: bold; }
+.glyph.stairs { color: #f0883e; font-weight: bold; }
