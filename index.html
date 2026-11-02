@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Shadow Crawl — A Traditional 2D & ASCII Roguelike</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -10,12 +10,20 @@
   <div id="game-app">
     <div id="game-container">
       
-      <!-- 1. Clean Top Header: Title, Floor, Stats, Controls -->
+      <!-- 1. Top Header: Brand, Floor, Stats, Controls -->
       <header id="game-header">
-        <div class="header-brand">
-          <span class="crest">⚔</span>
-          <span class="title">SHADOW CRAWL</span>
-          <span id="floor-badge" class="badge-floor">FLOOR B1</span>
+        <div class="header-top-row">
+          <div class="header-brand">
+            <span class="crest">⚔</span>
+            <span class="title">SHADOW CRAWL</span>
+            <span id="floor-badge" class="badge-floor">FLOOR B1</span>
+          </div>
+
+          <div class="header-actions">
+            <button id="gfx-toggle-btn" class="hdr-btn" title="Toggle 2D Sprites or ASCII">🎨 Sprites</button>
+            <button id="audio-toggle-btn" class="hdr-btn" title="Toggle Sound">🔊 Sound</button>
+            <button id="guide-btn" class="hdr-btn help-btn" title="Controls & Guide">❓ Help</button>
+          </div>
         </div>
 
         <div class="header-stats">
@@ -44,15 +52,9 @@
             <span id="turn-text" class="val">0</span>
           </div>
         </div>
-
-        <div class="header-actions">
-          <button id="gfx-toggle-btn" class="hdr-btn" title="Toggle 2D Sprites or ASCII">🎨 2D Sprites</button>
-          <button id="audio-toggle-btn" class="hdr-btn" title="Toggle Sound">🔊 Sound: ON</button>
-          <button id="guide-btn" class="hdr-btn help-btn" title="Controls & Guide">❓ Help</button>
-        </div>
       </header>
 
-      <!-- 2. Centered Game Canvas (Completely Unobstructed, No Overlapping HUD) -->
+      <!-- 2. Centered Game Canvas (Responsive, Scales Pixel-Perfect on Mobile & Desktop) -->
       <main id="canvas-section">
         <canvas id="game-canvas"></canvas>
       </main>
@@ -66,7 +68,7 @@
         <div class="satchel-container">
           <div class="satchel-title-row">
             <span>SATCHEL INVENTORY</span>
-            <span class="satchel-hint">KEYS [1] TO [5] OR CLICK SLOT TO USE/EQUIP</span>
+            <span class="satchel-hint">KEYS [1] TO [5] OR TAP SLOT TO USE/EQUIP</span>
           </div>
           <div id="inventory-hotbar" class="hotbar-slots">
             <!-- Populated via JavaScript -->
@@ -74,7 +76,33 @@
         </div>
       </section>
 
-      <!-- 4. Dual-Box Bottom Footer: Chronicle (Left) & Controls/Bestiary (Right) -->
+      <!-- 4. Mobile D-Pad & Touch Action Controls (Auto-adapts to Mobile & Small Screens) -->
+      <section id="mobile-controls-bar">
+        <div class="mobile-dpad-wrapper">
+          <div class="dpad-cross">
+            <button class="dpad-btn dpad-up" data-dir="up" aria-label="Up">▲</button>
+            <div class="dpad-mid-row">
+              <button class="dpad-btn dpad-left" data-dir="left" aria-label="Left">◄</button>
+              <button class="dpad-btn dpad-wait" data-dir="wait" aria-label="Wait" title="Wait / Pass Turn">WAIT</button>
+              <button class="dpad-btn dpad-right" data-dir="right" aria-label="Right">►</button>
+            </div>
+            <button class="dpad-btn dpad-down" data-dir="down" aria-label="Down">▼</button>
+          </div>
+        </div>
+
+        <div class="mobile-action-buttons">
+          <button class="mob-act-btn mob-btn-wait" data-action="wait" title="Wait 1 Turn">
+            <span class="btn-sym">⏳</span>
+            <span class="btn-txt">WAIT TURN</span>
+          </button>
+          <button class="mob-act-btn mob-btn-restart" data-action="restart" title="Restart Run">
+            <span class="btn-sym">🔄</span>
+            <span class="btn-txt">RESTART</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 5. Dual-Box Bottom Footer: Chronicle (Left) & Controls/Bestiary (Right) -->
       <footer id="game-footer">
         <!-- Left Box: Chronicle Log (Strictly fixed height, newest message pinned at bottom) -->
         <div class="footer-box chronicle-box">
@@ -185,8 +213,8 @@
       </div>
       <div class="modal-card-body">
         <p><strong>• Turn-Based Tactical Combat:</strong> Enemies only move when you take a step. Plan your movements carefully!</p>
-        <p><strong>• Bump-to-Attack:</strong> Walk directly into an enemy tile with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>Arrow Keys</kbd> to strike them with your equipped weapon.</p>
-        <p><strong>• Satchel & Hotbar:</strong> Step over potions, scrolls, or equipment to pick them up into your 5-slot satchel. Press <kbd>1</kbd> through <kbd>5</kbd> to use or equip them.</p>
+        <p><strong>• Bump-to-Attack:</strong> Walk directly into an enemy tile with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>, <kbd>Arrow Keys</kbd>, or touch <kbd>D-Pad</kbd> / <kbd>Swipe</kbd> to strike them with your equipped weapon.</p>
+        <p><strong>• Satchel & Hotbar:</strong> Step over potions, scrolls, or equipment to pick them up into your 5-slot satchel. Press <kbd>1</kbd> through <kbd>5</kbd> or tap the slot directly to use or equip them.</p>
         <p><strong>• The Objective:</strong> Locate the stone stairs (<span class="glyph stairs">&gt;</span>) in each floor to descend deeper. Slay <strong>Shadow Lord Malakor</strong> on Floor B5 and take the <strong>Amulet of Yendor</strong> to claim Victory!</p>
       </div>
       <div class="modal-card-footer">

@@ -27,6 +27,8 @@ export class Game {
 
     this.initHeaderControls();
     this.initGuideModal();
+    this.initDpad();
+    this.initCanvasTouch();
     this.initFloor();
     this.setupInput();
     this.startAnimationLoop();
@@ -82,6 +84,125 @@ export class Game {
         closeModal();
       }
     });
+  }
+
+  initDpad() {
+    const dpadButtons = document.querySelectorAll('.dpad-btn');
+    dpadButtons.forEach((btn) => {
+      const handlePress = (e) => {
+        e.preventDefault();
+        audio.init();
+        if (navigator.vibrate) {
+          try { navigator.vibrate(12); } catch (_) {}
+        }
+        const dir = btn.dataset.dir;
+        switch (dir) {
+          case 'up':
+            this.handlePlayerTurn(0, -1);
+            break;
+          case 'down':
+            this.handlePlayerTurn(0, 1);
+            break;
+          case 'left':
+            this.handlePlayerTurn(-1, 0);
+            break;
+          case 'right':
+            this.handlePlayerTurn(1, 0);
+            break;
+          case 'wait':
+            this.endTurn();
+            break;
+        }
+      };
+
+      btn.addEventListener('pointerdown', handlePress);
+    });
+
+    const actionButtons = document.querySelectorAll('.mob-act-btn');
+    actionButtons.forEach((btn) => {
+      const handleAction = (e) => {
+        e.preventDefault();
+        audio.init();
+        if (navigator.vibrate) {
+          try { navigator.vibrate(15); } catch (_) {}
+        }
+        const act = btn.dataset.action;
+        if (act === 'wait') {
+          this.endTurn();
+        } else if (act === 'restart') {
+          this.restart();
+        }
+      };
+
+      btn.addEventListener('pointerdown', handleAction);
+    });
+  }
+
+  initCanvasTouch() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+
+    this.canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+      }
+    }, { passive: true });
+
+    this.canvas.addEventListener('touchend', (e) => {
+      if (e.changedTouches.length === 1) {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const dx = touchEndX - touchStartX;
+        const dy = touchEndY - touchStartY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const duration = Date.now() - touchStartTime;
+
+        audio.init();
+
+        // 1. Swipe gesture (> 25px in under 500ms)
+        if (dist > 25 && duration < 500) {
+          e.preventDefault();
+          if (navigator.vibrate) {
+            try { navigator.vibrate(12); } catch (_) {}
+          }
+          if (Math.abs(dx) > Math.abs(dy)) {
+            this.handlePlayerTurn(dx > 0 ? 1 : -1, 0);
+          } else {
+            this.handlePlayerTurn(0, dy > 0 ? 1 : -1);
+          }
+          return;
+        }
+
+        // 2. Direct Tap gesture on canvas quadrant
+        if (dist < 15 && duration < 400) {
+          const rect = this.canvas.getBoundingClientRect();
+          const normX = (touchEndX - rect.left) / rect.width;
+          const normY = (touchEndY - rect.top) / rect.height;
+
+          // Center tap = wait turn
+          if (normX >= 0.35 && normX <= 0.65 && normY >= 0.35 && normY <= 0.65) {
+            this.endTurn();
+            return;
+          }
+
+          // Quadrant tap
+          const relX = normX - 0.5;
+          const relY = normY - 0.5;
+          if (navigator.vibrate) {
+            try { navigator.vibrate(12); } catch (_) {}
+          }
+
+          if (Math.abs(relX) > Math.abs(relY)) {
+            this.handlePlayerTurn(relX > 0 ? 1 : -1, 0);
+          } else {
+            this.handlePlayerTurn(0, relY > 0 ? 1 : -1);
+          }
+        }
+      }
+    }, { passive: false });
   }
 
   log(message, type = 'default') {

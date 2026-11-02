@@ -40,9 +40,9 @@ body {
   justify-content: center;
 }
 
-/* Master Game Container (Aligned exactly to 1008px Canvas Width) */
+/* Master Game Container (Responsive, Aligned to 1008px Canvas Width) */
 #game-container {
-  width: 1008px;
+  width: 100%;
   max-width: 1008px;
   background-color: var(--container-bg);
   border: 1px solid var(--border-color);
@@ -64,6 +64,13 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 8px 14px;
+  gap: 10px;
+}
+
+.header-top-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .header-brand {
@@ -180,10 +187,12 @@ body {
   color: #7dd3fc;
 }
 
-/* 2. Centered Game Canvas */
+/* 2. Centered Game Canvas (Responsive 36:20 Aspect Ratio) */
 #canvas-section {
-  width: 1008px;
-  height: 560px;
+  width: 100%;
+  max-width: 1008px;
+  aspect-ratio: 36 / 20;
+  height: auto;
   background-color: #030508;
   border: 1px solid var(--border-color);
   border-radius: 6px;
@@ -191,13 +200,17 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  touch-action: none;
+  position: relative;
 }
 
 canvas#game-canvas {
   display: block;
   image-rendering: pixelated;
-  width: 1008px;
-  height: 560px;
+  image-rendering: crisp-edges;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 36 / 20;
 }
 
 /* 3. Satchel Action Bar Directly Underneath */
@@ -568,6 +581,130 @@ canvas#game-canvas {
   font-weight: 700;
 }
 
+
+/* 4. Mobile Touch D-Pad & Action Controls Bar */
+#mobile-controls-bar {
+  display: none; /* Auto-revealed on mobile / touch viewports */
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(180deg, #0e1524 0%, #090e18 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 16px;
+  gap: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+.mobile-dpad-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dpad-cross {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dpad-mid-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.dpad-btn {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  min-height: 46px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #475569;
+  border-bottom: 2px solid #1e293b;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 800;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.08s ease;
+}
+
+.dpad-btn:active,
+.dpad-btn.pressed {
+  background: linear-gradient(180deg, #0f172a 0%, #0284c7 100%);
+  border-color: var(--accent-cyan);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  transform: translateY(1px);
+}
+
+.dpad-btn.dpad-wait {
+  width: 50px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--accent-gold);
+  border-color: rgba(250, 204, 21, 0.4);
+}
+
+.mobile-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  max-width: 170px;
+}
+
+.mob-act-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, #172033 0%, #0c1220 100%);
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: all 0.1s ease;
+}
+
+.mob-act-btn:active {
+  transform: translateY(1px);
+  filter: brightness(1.2);
+}
+
+.mob-btn-wait {
+  border-color: rgba(250, 204, 21, 0.4);
+  color: var(--accent-gold);
+}
+
+.mob-btn-restart {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: var(--accent-cyan);
+}
+
+.btn-sym {
+  font-size: 0.9rem;
+}
+
 /* 5. Help Modal (Hidden by Default) */
 .modal-backdrop {
   position: fixed;
@@ -671,4 +808,167 @@ canvas#game-canvas {
 
 .modal-cta-btn:hover {
   filter: brightness(1.15);
+}
+
+
+/* =========================================================================
+   RESPONSIVE DESIGN (PHONES, TABLETS & SMALL SCREENS)
+   ========================================================================= */
+@media (max-width: 850px) {
+  body {
+    padding: 6px 4px;
+  }
+
+  #game-container {
+    padding: 8px 6px;
+    gap: 8px;
+    border-radius: 6px;
+  }
+
+  /* Header 2-row layout on mobile */
+  #game-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .header-top-row {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .header-stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .hp-unit {
+    min-width: 0;
+  }
+
+  /* Show Mobile D-Pad controller */
+  #mobile-controls-bar {
+    display: flex;
+  }
+
+  /* Footer Stacks Vertically on Mobile */
+  #game-footer {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    gap: 8px;
+  }
+
+  .footer-box.chronicle-box {
+    height: 115px;
+    min-height: 115px;
+    max-height: 115px;
+  }
+
+  .footer-box.guide-box {
+    height: auto;
+    min-height: auto;
+    max-height: none;
+  }
+
+  .guide-box-body {
+    grid-template-columns: 1fr 1.35fr;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 550px) {
+  body {
+    padding: 3px 2px;
+  }
+
+  #game-container {
+    padding: 6px 4px;
+    gap: 6px;
+  }
+
+  .header-brand .title {
+    font-size: 0.92rem;
+    letter-spacing: 1px;
+  }
+
+  .header-brand .crest {
+    font-size: 1.1rem;
+  }
+
+  .badge-floor {
+    font-size: 0.62rem;
+    padding: 1px 5px;
+  }
+
+  .hdr-btn {
+    padding: 4px 6px;
+    font-size: 0.65rem;
+  }
+
+  .header-stats {
+    grid-template-columns: 1.2fr 0.9fr 0.8fr 0.7fr;
+    gap: 5px;
+  }
+
+  .stat-unit .lbl {
+    font-size: 0.55rem;
+  }
+
+  .stat-unit .val {
+    font-size: 0.7rem;
+  }
+
+  /* Hotbar slots touch friendly */
+  .hotbar-slot {
+    padding: 5px 6px;
+    font-size: 0.65rem;
+  }
+
+  .slot-num {
+    font-size: 0.62rem;
+  }
+
+  .dpad-btn {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    font-size: 1rem;
+  }
+
+  .dpad-btn.dpad-wait {
+    width: 44px;
+    font-size: 0.6rem;
+  }
+
+  .mob-act-btn {
+    padding: 8px 10px;
+    font-size: 0.68rem;
+  }
+
+  /* Guide box subcards stack on small phones */
+  .guide-box-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .controls-list {
+    gap: 3px;
+  }
+
+  .chips-row {
+    flex-wrap: wrap;
+  }
+
+  .legend-chip {
+    flex: 1 1 calc(33.333% - 4px);
+  }
 }
