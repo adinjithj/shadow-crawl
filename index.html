@@ -3,124 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shadow Crawl — The 2D Roguelike</title>
+  <title>Shadow Crawl — A Traditional 2D & ASCII Roguelike</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="game-app">
-    <!-- Main Game Window Frame -->
-    <div id="game-chassis">
+    <div id="game-container">
       
-      <!-- Top Title & Navigation Bar -->
-      <header id="game-topbar">
-        <div class="topbar-left">
-          <div class="game-logo">
-            <span class="crest">⚔</span>
-            <span class="title">SHADOW CRAWL</span>
-          </div>
-          <span id="floor-badge" class="badge floor-badge">FLOOR B1</span>
+      <!-- 1. Clean Top Header: Title, Floor, Stats, Controls -->
+      <header id="game-header">
+        <div class="header-brand">
+          <span class="crest">⚔</span>
+          <span class="title">SHADOW CRAWL</span>
+          <span id="floor-badge" class="badge-floor">FLOOR B1</span>
         </div>
 
-        <div class="topbar-right">
-          <button id="guide-btn" class="nav-btn" title="Game Guide & Rules">❓ Guide</button>
-          <button id="gfx-toggle-btn" class="nav-btn" title="Toggle 2D Sprites or ASCII">🎨 2D Sprites</button>
-          <button id="audio-toggle-btn" class="nav-btn" title="Toggle Sound">🔊 Sound: ON</button>
+        <div class="header-stats">
+          <div class="stat-unit hp-unit">
+            <div class="stat-label-row">
+              <span class="lbl">HP</span>
+              <span id="hp-text" class="val">30 / 30</span>
+            </div>
+            <div class="hp-bar-track">
+              <div id="hp-bar" class="hp-bar-fill"></div>
+            </div>
+          </div>
+
+          <div class="stat-unit">
+            <span class="lbl">HERO</span>
+            <span id="level-text" class="val">Lv 1 (0/60 XP)</span>
+          </div>
+
+          <div class="stat-unit">
+            <span class="lbl">GOLD</span>
+            <span id="gold-text" class="val gold-val">0g</span>
+          </div>
+
+          <div class="stat-unit">
+            <span class="lbl">TURNS</span>
+            <span id="turn-text" class="val">0</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="gfx-toggle-btn" class="hdr-btn" title="Toggle 2D Sprites or ASCII">🎨 2D Sprites</button>
+          <button id="audio-toggle-btn" class="hdr-btn" title="Toggle Sound">🔊 Sound: ON</button>
+          <button id="guide-btn" class="hdr-btn help-btn" title="Controls & Guide">❓ Help</button>
         </div>
       </header>
 
-      <!-- Main Game Arena (Canvas + Overlay HUD) -->
-      <div id="arena-viewport">
+      <!-- 2. Centered Game Canvas (Completely Unobstructed, No Overlapping HUD) -->
+      <main id="canvas-section">
         <canvas id="game-canvas"></canvas>
+      </main>
 
-        <!-- In-Game Translucent Chronicle Log Overlay (Bottom Left) -->
-        <div id="in-game-log">
-          <div class="log-header">CHRONICLE</div>
-          <div id="log-box" class="log-messages"></div>
+      <!-- 3. Action Bar / Satchel Directly Underneath -->
+      <section id="satchel-action-bar">
+        <div id="loadout-ribbon">
+          <span class="ribbon-lbl">EQUIPPED:</span>
+          <span id="gear-text" class="ribbon-val">🗡️ Fists (+0) | 🛡️ Clothes (+0) | ATK: 6 | DEF: 1</span>
+        </div>
+        <div class="satchel-container">
+          <div class="satchel-title-row">
+            <span>SATCHEL INVENTORY</span>
+            <span class="satchel-hint">KEYS [1] TO [5] OR CLICK SLOT TO USE/EQUIP</span>
+          </div>
+          <div id="inventory-hotbar" class="hotbar-slots">
+            <!-- Populated via JavaScript -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Dual-Box Bottom Footer: Chronicle (Left) & Controls/Bestiary (Right) -->
+      <footer id="game-footer">
+        <!-- Left Box: Chronicle Log (Strictly fixed height, newest message pinned at bottom) -->
+        <div class="footer-box chronicle-box">
+          <div class="box-header">CHRONICLE (COMBAT & EXPLORATION LOG)</div>
+          <div id="log-box" class="log-scroll-area"></div>
         </div>
 
-        <!-- On-Screen D-Pad Controller (Bottom Right) -->
-        <div id="dpad-controller">
-          <button class="dpad-btn up" data-dir="up">▲</button>
-          <div class="dpad-middle-row">
-            <button class="dpad-btn left" data-dir="left">◀</button>
-            <button class="dpad-btn wait" data-dir="wait" title="Wait 1 Turn">●</button>
-            <button class="dpad-btn right" data-dir="right">▶</button>
-          </div>
-          <button class="dpad-btn down" data-dir="down">▼</button>
-        </div>
-
-        <!-- Slide-Over In-Game Guide Panel -->
-        <div id="in-game-guide" class="guide-drawer hidden">
-          <div class="guide-header">
-            <h3>⚔️ HOW TO PLAY SHADOW CRAWL</h3>
-            <button id="close-guide-btn" class="close-guide-btn">✕</button>
-          </div>
-          <div class="guide-content">
-            <div class="rule-card">
-              <span class="rule-num">1</span>
-              <div class="rule-body">
-                <strong>Turn-Based Tactical World:</strong> Enemies only take a step when <em>you</em> take a step. Take your time!
+        <!-- Right Box: Controls & Bestiary -->
+        <div class="footer-box guide-box">
+          <div class="box-header">CONTROLS & BESTIARY</div>
+          <div class="guide-box-body">
+            <div class="guide-col">
+              <div class="guide-row"><span class="k-tag">WASD / Arrows</span> <span class="k-desc">Move & Bump Attack</span></div>
+              <div class="guide-row"><span class="k-tag">1 - 5</span> <span class="k-desc">Use / Equip Item</span></div>
+              <div class="guide-row"><span class="k-tag">Space / .</span> <span class="k-desc">Wait 1 Turn</span></div>
+              <div class="guide-row"><span class="k-tag">R</span> <span class="k-desc">Restart Run</span></div>
+            </div>
+            <div class="guide-col legend-col">
+              <div class="legend-line">
+                <span class="glyph hero">@</span> Knight &nbsp;
+                <span class="glyph goblin">g</span> Goblin &nbsp;
+                <span class="glyph orc">o</span> Orc &nbsp;
+                <span class="glyph skeleton">s</span> Skeleton
+              </div>
+              <div class="legend-line">
+                <span class="glyph drake">D</span> Drake &nbsp;
+                <span class="glyph boss">Ω</span> Malakor &nbsp;
+                <span class="glyph stairs">&gt;</span> Stairs Down
+              </div>
+              <div class="legend-line">
+                <span class="glyph potion">!</span> Potion &nbsp;
+                <span class="glyph scroll">?</span> Scroll &nbsp;
+                <span class="glyph weapon">/</span> Weapon &nbsp;
+                <span class="glyph armor">]</span> Armor &nbsp;
+                <span class="glyph gold">$</span> Gold
               </div>
             </div>
-            <div class="rule-card">
-              <span class="rule-num">2</span>
-              <div class="rule-body">
-                <strong>Bump-to-Attack Combat:</strong> Use <span class="tag">WASD</span>, <span class="tag">Arrows</span>, or the <span class="tag">D-Pad</span>. To attack an enemy, simply walk directly into them!
-              </div>
-            </div>
-            <div class="rule-card">
-              <span class="rule-num">3</span>
-              <div class="rule-body">
-                <strong>Satchel & Hotbar (1-5):</strong> Walk over potions, scrolls, and equipment to pick them up. Press <span class="tag">1</span> through <span class="tag">5</span> or click the slot to use/equip!
-              </div>
-            </div>
-            <div class="rule-card">
-              <span class="rule-num">4</span>
-              <div class="rule-body">
-                <strong>The Victory Goal:</strong> Take the stone stairs (<span class="gold-text">&gt;</span>) down through 5 levels. Slay the <strong>Shadow Lord Malakor</strong> on Floor B5 and claim the <strong>Amulet of Yendor</strong> to win!
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom RPG Action Bar & Inventory -->
-      <footer id="rpg-action-bar">
-        <!-- Vitals: HP & XP -->
-        <div class="action-bar-vitals">
-          <div class="stat-row">
-            <span class="stat-name">HP</span>
-            <span id="hp-text" class="stat-value">30 / 30</span>
-          </div>
-          <div class="progress-bar-bg hp-bar-bg">
-            <div id="hp-bar" class="hp-bar-fill"></div>
-          </div>
-
-          <div class="stat-row mt-2">
-            <span class="stat-name">HERO</span>
-            <span id="level-text" class="stat-value">Lv 1 (0/60 XP)</span>
-          </div>
-        </div>
-
-        <!-- Loadout & Stats -->
-        <div class="action-bar-loadout">
-          <div class="loadout-title">EQUIPMENT & STATS</div>
-          <div id="gear-text" class="loadout-details">🗡️ Fists (+0) | 🛡️ Clothes (+0) | ATK: 6 | DEF: 1</div>
-          <div class="gold-turns-row">
-            <span>GOLD: <strong id="gold-text" class="gold-val">0g</strong></span>
-            <span>TURNS: <strong id="turn-text">0</strong></span>
-          </div>
-        </div>
-
-        <!-- 5-Slot Inventory Hotbar -->
-        <div class="action-bar-hotbar">
-          <div class="hotbar-title">SATCHEL (KEYS 1-5 OR CLICK)</div>
-          <div id="inventory-hotbar" class="hotbar-grid">
-            <!-- Populated via Game.updateUI() -->
           </div>
         </div>
       </footer>
 
+    </div>
+  </div>
+
+  <!-- Help / Instructions Modal (Hidden by Default) -->
+  <div id="guide-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-card-header">
+        <h3>⚔️ HOW TO PLAY SHADOW CRAWL</h3>
+        <button id="close-modal-btn" class="modal-close-btn">✕</button>
+      </div>
+      <div class="modal-card-body">
+        <p><strong>• Turn-Based Tactical Combat:</strong> Enemies only move when you take a step. Plan your movements carefully!</p>
+        <p><strong>• Bump-to-Attack:</strong> Walk directly into an enemy tile with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>Arrow Keys</kbd> to strike them with your equipped weapon.</p>
+        <p><strong>• Satchel & Hotbar:</strong> Step over potions, scrolls, or equipment to pick them up into your 5-slot satchel. Press <kbd>1</kbd> through <kbd>5</kbd> to use or equip them.</p>
+        <p><strong>• The Objective:</strong> Locate the stone stairs (<span class="glyph stairs">&gt;</span>) in each floor to descend deeper. Slay <strong>Shadow Lord Malakor</strong> on Floor B5 and take the <strong>Amulet of Yendor</strong> to claim Victory!</p>
+      </div>
+      <div class="modal-card-footer">
+        <button id="start-game-btn" class="modal-cta-btn">RESUME DELVE</button>
+      </div>
     </div>
   </div>
 

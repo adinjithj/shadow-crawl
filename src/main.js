@@ -26,8 +26,7 @@ export class Game {
     this.messages = [];
 
     this.initHeaderControls();
-    this.initGuideDrawer();
-    this.initDpad();
+    this.initGuideModal();
     this.initFloor();
     this.setupInput();
     this.startAnimationLoop();
@@ -58,58 +57,37 @@ export class Game {
     }
   }
 
-  initGuideDrawer() {
-    const drawer = document.getElementById('in-game-guide');
+  initGuideModal() {
+    const modal = document.getElementById('guide-modal');
     const guideBtn = document.getElementById('guide-btn');
-    const closeBtn = document.getElementById('close-guide-btn');
+    const closeBtn = document.getElementById('close-modal-btn');
+    const startBtn = document.getElementById('start-game-btn');
 
-    if (guideBtn && drawer) {
-      guideBtn.addEventListener('click', () => {
-        audio.init();
-        audio.playTone(480, 'sine', 0.08, 0.12);
-        drawer.classList.toggle('hidden');
-      });
-    }
+    const openModal = () => {
+      if (modal) modal.classList.remove('hidden');
+    };
 
-    if (closeBtn && drawer) {
-      closeBtn.addEventListener('click', () => {
-        drawer.classList.add('hidden');
-      });
-    }
-  }
+    const closeModal = () => {
+      if (modal) modal.classList.add('hidden');
+      audio.init();
+      audio.playTone(520, 'sine', 0.1, 0.15);
+    };
 
-  initDpad() {
-    const dpadButtons = document.querySelectorAll('.dpad-btn');
-    dpadButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        audio.init();
-        const dir = btn.dataset.dir;
-        switch (dir) {
-          case 'up':
-            this.handlePlayerTurn(0, -1);
-            break;
-          case 'down':
-            this.handlePlayerTurn(0, 1);
-            break;
-          case 'left':
-            this.handlePlayerTurn(-1, 0);
-            break;
-          case 'right':
-            this.handlePlayerTurn(1, 0);
-            break;
-          case 'wait':
-            this.endTurn();
-            break;
-        }
-      });
+    if (guideBtn) guideBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (startBtn) startBtn.addEventListener('click', closeModal);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+        closeModal();
+      }
     });
   }
 
   log(message, type = 'default') {
     const logBox = document.getElementById('log-box');
     this.messages.push({ message, type });
-    if (this.messages.length > 50) this.messages.shift();
+    if (this.messages.length > 100) this.messages.shift();
 
     if (logBox) {
       const msgElem = document.createElement('div');
@@ -117,11 +95,14 @@ export class Game {
       msgElem.textContent = message;
       logBox.appendChild(msgElem);
 
-      // Keep only last 5 visible lines
-      while (logBox.children.length > 5) {
+      while (logBox.children.length > 80) {
         logBox.removeChild(logBox.firstChild);
       }
-      logBox.scrollTop = logBox.scrollHeight;
+
+      // Auto-scroll so newest message stays locked at bottom and older messages scroll up
+      requestAnimationFrame(() => {
+        logBox.scrollTop = logBox.scrollHeight;
+      });
     }
   }
 
